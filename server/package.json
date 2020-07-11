@@ -1,0 +1,28 @@
+{
+  "name": "neomebious",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.mjs",
+  "scripts": {
+    "start": "nodemon src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/body-parser": "^1.19.0",
+    "@types/express": "^4.17.7",
+    "@types/gm": "^1.18.9",
+    "@types/multer": "^1.4.3",
+    "axios": "^0.19.2",
+    "data-uri-to-buffer": "^3.0.1",
+    "express": "^4.17.1",
+    "gm": "^1.23.1",
+    "multer": "^1.4.2",
+    "nodemon": "^2.0.4",
+    "pg": "^8.2.1",
+    "ts-node": "^8.10.2",
+    "typeorm": "^0.2.25",
+    "typescript": "^3.9.6"
+  }
+}
