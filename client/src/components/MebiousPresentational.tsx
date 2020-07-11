@@ -1,7 +1,7 @@
 import React from "react";
 
 import "../static/css/mebious.css";
-import { stylizeImg, corruptText } from "../utils/mebiousUtils";
+import { stylizeImg, corruptText, stylizeText } from "../utils/mebiousUtils";
 
 const MebiousPresentational: React.FC<any> = (props) => {
   return (
@@ -9,8 +9,20 @@ const MebiousPresentational: React.FC<any> = (props) => {
       <div id="topbar">
         <form method="post" action="/api/text">
           <div id="upload_text">
-            <input name="text" />
-            <button id="text_button">in_txt</button>
+            <input
+              name="text"
+              type="text"
+              value={props.textInput}
+              onChange={(e) => props.setTextInput(e.target.value)}
+            />
+            <button
+              id="text_button"
+              onClick={(e: React.MouseEvent<HTMLElement>) =>
+                props.submitText(e as any, props.textInput)
+              }
+            >
+              in_txt
+            </button>
           </div>
         </form>
         <form method="post" action="/api/urls">
@@ -35,7 +47,9 @@ const MebiousPresentational: React.FC<any> = (props) => {
         </div>
         <div id="text">
           {props.textState.map((text: string, idx: number) => (
-            <h1>{corruptText(text)}</h1>
+            <h1 key={idx} style={stylizeText()}>
+              {corruptText(text)}
+            </h1>
           ))}
         </div>
       </div>

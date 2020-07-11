@@ -22,11 +22,11 @@ const postUrl = async (req: Request, res: Response) => {
   const spawn = Date.now();
 
   const spam = await isSpam(Image, ip);
-  if (spam) return res.send({ reason: "spam", status: 400 });
+  if (spam) return res.status(400).send({ reason: "spam" });
 
   // downloads the image from url to filePath and returns the image format
   const imageFormat = await downloadImage(req.body.imgUrl, filePath);
-  if (!imageFormat) return res.send({ reason: "invalid", status: 400 });
+  if (!imageFormat) return res.status(400).send({ reason: "invalid" });
 
   // get hash from the image
   const hash: string = await sha1Hash(filePath);
@@ -37,7 +37,7 @@ const postUrl = async (req: Request, res: Response) => {
   );
 
   if (isDuplicate.length != 0)
-    return res.send({ reason: "duplicate", status: 400 });
+    return res.status(400).send({ reason: "duplicate" });
 
   const outputDest = __dirname + "/../uploads/" + fileName + imageFormat;
   formatAndSaveImage(filePath, outputDest);
@@ -56,7 +56,7 @@ const postUrl = async (req: Request, res: Response) => {
     .manager.save(image)
     .catch((err) => {
       console.log(err);
-      return res.send({ reason: "error", status: 400 });
+      return res.status(400).send({ reason: "error" });
     });
 
   res.send(200);

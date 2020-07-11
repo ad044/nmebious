@@ -13,7 +13,7 @@ const isBanned = async (req: Request, res: Response, next: Function) => {
     },
   });
 
-  if (ban) return res.send({ reason: "banned", status: 400 });
+  if (ban) return res.status(400).send({ reason: "banned" });
   next();
 };
 
@@ -29,7 +29,8 @@ const isSpam = async (
     .getRawOne();
 
   // if the user has posted in the last 20 seconds, mark it as spam
-  if (Date.now() - parseInt(lastPost.entity_spawn) < 20000) return true;
+  if (lastPost && Date.now() - parseInt(lastPost.entity_spawn) < 20000)
+    return true;
   return false;
 };
 

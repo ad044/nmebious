@@ -23,6 +23,7 @@ const downloadImage = (url: string, filePath: string) => {
   return (
     axios
       .get(url, {
+        method: "GET",
         responseType: "stream",
       })
       .then((response) => {

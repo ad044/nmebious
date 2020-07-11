@@ -14,17 +14,17 @@ const postText = async (req: Request, res: Response) => {
   const spawn = Date.now();
 
   const spam = await isSpam(Text, ip);
-  if (spam) return res.send({ reason: "spam", status: 400 });
+  if (spam) return res.status(400).send({ reason: "spam" });
 
   const isDuplicate: Array<Text> | [] | undefined = await isTextDuplicate(
     submittedText
   );
 
   if (isDuplicate.length != 0)
-    return res.send({ reason: "duplicate", status: 400 });
+    return res.status(400).send({ reason: "duplicate" });
 
   if (!isAsciiOnly(submittedText))
-    return res.send({ reason: "nonascii", status: 400 });
+    return res.status(400).send({ reason: "nonascii" });
 
   // save text to db
   const text = getRepository(Text).create({
@@ -39,7 +39,7 @@ const postText = async (req: Request, res: Response) => {
     .manager.save(text)
     .catch((err) => {
       console.log(err);
-      return res.send({ reason: "error", status: 400 });
+      return res.status(400).send({ reason: "error" });
     });
 
   res.send(200);
