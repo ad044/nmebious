@@ -3,22 +3,8 @@ import MebiousPresentational from "./MebiousPresentational";
 import axios from "axios";
 
 const Mebious: React.FC = () => {
-  const [textInput, setTextInput] = useState("");
-
   const [imageState, setImageState] = useState<Array<string>>([]);
   const [textState, setTextState] = useState<Array<string>>([]);
-
-  const submitText = (e: any, text: string) => {
-    e.preventDefault();
-    axios
-      .post("/api/text", { text: text })
-      .then((res) => {
-        console.log(res)
-      })
-      .catch(() => {
-        console.log("not sex");
-      });
-  };
 
   useEffect(() => {
     const fetchImageData = () => {
@@ -59,9 +45,6 @@ const Mebious: React.FC = () => {
     <MebiousPresentational
       imageState={imageState}
       textState={textState}
-      textInput={textInput}
-      submitText={submitText}
-      setTextInput={setTextInput}
     />
   );
 };

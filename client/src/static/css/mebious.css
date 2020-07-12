@@ -40,12 +40,12 @@ a {
   background-color: #000000;
   text-align: center;
   position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 3px;
 }
-#upload_text,
-#upload_img,
-#upload_url {
+.uploads {
   display: inline;
-  float: left;
   padding: 2px;
   margin: 2px;
   border: 1px solid #003300;
@@ -55,12 +55,8 @@ a {
   height: 100%;
 }
 #error_text {
-  margin-top: 0.5em;
-  font-size: 1.5em;
+  margin-left: 0.5em;
+  margin-top: 0.1em;
   color: red;
   display: inline;
-  position: absolute;
-}
-#rss {
-  float: left;
 }

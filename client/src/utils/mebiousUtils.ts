@@ -41,7 +41,6 @@ const corrupt = (char: string) => {
         break;
       case "s":
         if (Math.random() < 0.7) return randomFromArr(corruptionsS);
-        break;
     }
   }
   return char;
