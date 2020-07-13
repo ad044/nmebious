@@ -1,4 +1,4 @@
-A clone of [mebious](http://mebious.co.uk) written in JavaScript along with some additional functionality like live updates and url submission support.
+A clone of [mebious](http://mebious.co.uk) written in TypeScript along with some additional functionality like live updates and url submission support.
 
 Inspiration taken from another clone written in Ruby - https://github.com/ix/mebious/
 
