@@ -2,7 +2,12 @@ import React from "react";
 
 import "../static/css/mebious.css";
 
-const MebiousPresentational: React.FC<any> = (props) => {
+type MebiousState = {
+  imagePresentationalState: Array<JSX.Element>;
+  textPresentationalState: Array<JSX.Element>;
+};
+
+const MebiousPresentational: React.FC<MebiousState> = (props) => {
   return (
     <React.Fragment>
       <div id="posts">

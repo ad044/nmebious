@@ -1,6 +1,27 @@
 import React from "react";
 
-const TopbarPresentational: React.FC<any> = (props) => {
+type TopbarState = {
+  textInput: string;
+  urlInput: string;
+  errorState: string;
+
+  textBoxError: boolean;
+  urlBoxError: boolean;
+  imageBoxError: boolean;
+
+  fileSelectHandler: (e: React.ChangeEvent) => void;
+  submitTo: (
+    e: React.MouseEvent<HTMLElement>,
+    to: string,
+    data: object
+  ) => void;
+  submitImage: (e: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+
+  setTextInput: (text: string) => void;
+  setUrlInput: (url: string) => void;
+};
+
+const TopbarPresentational: React.FC<TopbarState> = (props) => {
   return (
     <div id="topbar">
       <form>
@@ -66,7 +87,9 @@ const TopbarPresentational: React.FC<any> = (props) => {
                 : {}
             }
             type="file"
-            onChange={props.fileSelectHandler}
+            onChange={(e: React.ChangeEvent) =>
+              props.fileSelectHandler(e)
+            }
           />
           <button
             style={
@@ -75,9 +98,7 @@ const TopbarPresentational: React.FC<any> = (props) => {
                 : {}
             }
             id="img_button"
-            onClick={(e: React.MouseEvent<HTMLElement>) =>
-              props.submitImage(e, "/api/images")
-            }
+            onClick={(e: React.MouseEvent<HTMLElement>) => props.submitImage(e)}
           >
             in_img
           </button>

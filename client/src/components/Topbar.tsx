@@ -13,7 +13,7 @@ const Topbar: React.FC = () => {
   const [urlBoxError, setUrlBoxError] = useState(false);
   const [imageBoxError, setImageBoxError] = useState(false);
 
-  const fileSelectHandler = (e: HTMLInputElement) => {
+  const fileSelectHandler = (e: React.ChangeEvent) => {
     setImgInput((e as any).target.files[0]);
   };
 

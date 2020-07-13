@@ -1,4 +1,4 @@
-import React, { useEffect, useState, ReactElement } from "react";
+import React, { useEffect, useState } from "react";
 import MebiousPresentational from "./MebiousPresentational";
 import { stylizeImg, corruptText, stylizeText } from "../utils/mebiousUtils";
 import Topbar from "./Topbar";
@@ -9,10 +9,10 @@ const Mebious: React.FC = () => {
   const [textState, setTextState] = useState<Array<string>>([]);
 
   const [textPresentationalState, setTextPresentationalState] = useState<
-    Array<ReactElement>
+    Array<JSX.Element>
   >();
   const [imagePresentationalState, setImagePresentationalState] = useState<
-    Array<ReactElement>
+    Array<JSX.Element>
   >();
 
   const getDifference = (
@@ -22,7 +22,10 @@ const Mebious: React.FC = () => {
     return arr1.filter((x) => !arr2.includes(x));
   };
 
-  const replaceItemsAtBeginning = (arr1: Array<any>, arr2: Array<any>) => {
+  const replaceItemsAtBeginning = <T extends {}>(
+    arr1: Array<T>,
+    arr2: Array<T>
+  ): Array<T> => {
     return arr2.concat(arr1.slice(0, arr1.length - arr2.length));
   };
 
@@ -131,8 +134,8 @@ const Mebious: React.FC = () => {
     <React.Fragment>
       <Topbar />
       <MebiousPresentational
-        textPresentationalState={textPresentationalState}
-        imagePresentationalState={imagePresentationalState}
+        textPresentationalState={textPresentationalState!}
+        imagePresentationalState={imagePresentationalState!}
       />
     </React.Fragment>
   );
