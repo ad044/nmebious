@@ -1,6 +1,10 @@
 import express from "express";
 import multer from "multer";
-import { postImage, getImages } from "../controllers/imageController";
+import {
+  postImage,
+  getImages,
+  getImagesTillN,
+} from "../controllers/imageController";
 import { isBanned } from "../utils/postUtils";
 
 const router = express.Router();
@@ -20,6 +24,11 @@ router.post("/", isBanned, upload.single("img"), (req, res) => {
 // get images
 router.get("/", (req, res) => {
   getImages(req, res);
+});
+
+// get images till n
+router.get("/:n", (req, res) => {
+  getImagesTillN(req, res, parseInt(req.params.n));
 });
 
 export = router;

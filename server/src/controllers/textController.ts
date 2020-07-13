@@ -56,4 +56,15 @@ const getText = async (req: Request, res: Response) => {
   );
 };
 
-export { postText, getText };
+const getTextTillN = async (req: Request, res: Response, n: number) => {
+  return res.send(
+    await getRepository(Text)
+      .createQueryBuilder("text")
+      .select(["text.text"])
+      .limit(n)
+      .orderBy("id", "DESC")
+      .getMany()
+  );
+};
+
+export { postText, getText, getTextTillN };

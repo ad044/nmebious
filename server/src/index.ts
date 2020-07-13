@@ -1,6 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
+import fs from "fs";
 
 import { createConnection } from "typeorm";
 
@@ -40,6 +41,9 @@ createConnection({
     console.log("Successfully connected.");
   })
   .catch((error) => console.log(error));
+
+if (!fs.existsSync("./temp")) fs.mkdirSync("./temp");
+if (!fs.existsSync("./uploads")) fs.mkdirSync("./uploads");
 
 const port: number = 8080;
 app.listen(port, () => console.log("Starting server on port 8000..."));

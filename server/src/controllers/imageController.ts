@@ -21,6 +21,17 @@ const getImages = async (req: Request, res: Response) => {
   );
 };
 
+const getImagesTillN = async (req: Request, res: Response, n: number) => {
+  return res.send(
+    await getRepository(Image)
+      .createQueryBuilder("image")
+      .select(["image.fileName"])
+      .limit(n)
+      .orderBy("id", "DESC")
+      .getMany()
+  );
+};
+
 const postImage = async (req: Request, res: Response) => {
   const [filePath, fileName] = [req.file.path, req.file.filename];
   const ip =
@@ -68,4 +79,4 @@ const postImage = async (req: Request, res: Response) => {
   res.send(200);
 };
 
-export { postImage, getImages };
+export { postImage, getImages, getImagesTillN };
