@@ -8,6 +8,7 @@ Inspiration taken from another clone written in Ruby - https://github.com/ix/meb
 - Move inside **/server/** and run `npm install`.
 - Start both of them by running `npm start` in each of these directories.
 
+The server looks for a database named "mebi" on PostgreSQL.
 Server runs on port `8080` while the clientside is hosted on port `3000`.
 ## Code overview
 - **/server/** 
