@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import TopbarPresentational from "./TopbarPresentational";
 
-const Topbar: React.FC<any> = (props) => {
+const Topbar: React.FC = () => {
   const [textInput, setTextInput] = useState("");
   const [urlInput, setUrlInput] = useState("");
   const [imgInput, setImgInput] = useState<File>();
@@ -15,6 +15,13 @@ const Topbar: React.FC<any> = (props) => {
 
   const fileSelectHandler = (e: HTMLInputElement) => {
     setImgInput((e as any).target.files[0]);
+  };
+
+  const resetErrors = () => {
+    setTextBoxError(false);
+    setUrlBoxError(false);
+    setImageBoxError(false);
+    setErrorState("");
   };
 
   // image submissions
@@ -36,7 +43,11 @@ const Topbar: React.FC<any> = (props) => {
             "content-type": "multipart/form-data",
           },
         })
+        .then(() => {
+          resetErrors();
+        })
         .catch((err) => {
+          setImageBoxError(true);
           if (!err.response) return setErrorState("Error.");
           switch (err.response.data.reason) {
             case "empty":
@@ -66,41 +77,46 @@ const Topbar: React.FC<any> = (props) => {
   ) => {
     e.preventDefault();
     const eventTarget = e.currentTarget.id;
-    axios.post(to, data).catch((err) => {
-      if (!err.response) return setErrorState("Error.");
-      switch (err.response.data.reason) {
-        case "duplicate":
-          setErrorState("Duplicate.");
-          break;
-        case "nonascii":
-          setErrorState("Posts can't contain non-ascii characters.");
-          break;
-        case "spam":
-          setErrorState("Spam.");
-          break;
-        case "invalid":
-          setErrorState("Invalid.");
-          break;
-        case "error":
-          setErrorState("Error.");
-          break;
-        case "empty":
-          setErrorState("Empty.");
-      }
-      switch (eventTarget) {
-        case "text":
-          setUrlBoxError(false);
-          setImageBoxError(false);
+    axios
+      .post(to, data)
+      .then(() => {
+        resetErrors();
+      })
+      .catch((err) => {
+        if (!err.response) return setErrorState("Error.");
+        switch (err.response.data.reason) {
+          case "duplicate":
+            setErrorState("Duplicate.");
+            break;
+          case "nonascii":
+            setErrorState("Posts can't contain non-ascii characters.");
+            break;
+          case "spam":
+            setErrorState("Spam.");
+            break;
+          case "invalid":
+            setErrorState("Invalid.");
+            break;
+          case "error":
+            setErrorState("Error.");
+            break;
+          case "empty":
+            setErrorState("Empty.");
+        }
+        switch (eventTarget) {
+          case "text":
+            setUrlBoxError(false);
+            setImageBoxError(false);
 
-          setTextBoxError(true);
-          break;
-        case "url":
-          setTextBoxError(false);
-          setImageBoxError(false);
+            setTextBoxError(true);
+            break;
+          case "url":
+            setTextBoxError(false);
+            setImageBoxError(false);
 
-          setUrlBoxError(true);
-      }
-    });
+            setUrlBoxError(true);
+        }
+      });
   };
 
   return (

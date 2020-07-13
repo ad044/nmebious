@@ -11,78 +11,128 @@ const Mebious: React.FC = () => {
   const [textPresentationalState, setTextPresentationalState] = useState<
     Array<ReactElement>
   >();
+  const [imagePresentationalState, setImagePresentationalState] = useState<
+    Array<ReactElement>
+  >();
+
+  const getDifference = (
+    arr1: Array<string>,
+    arr2: Array<string>
+  ): Array<string> => {
+    return arr1.filter((x) => !arr2.includes(x));
+  };
+
+  const replaceItemsAtBeginning = (arr1: Array<any>, arr2: Array<any>) => {
+    return arr2.concat(arr1.slice(0, arr1.length - arr2.length));
+  };
+
+  const fetchImageData = () => {
+    return axios
+      .get("/api/images", {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      })
+      .then((res) => {
+        return res.data.map(
+          (imageEntry: { fileName: string }) => imageEntry.fileName
+        );
+      });
+  };
+
+  const fetchTextData = () => {
+    return axios
+      .get("/api/text", {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      })
+      .then((res) => {
+        return res.data.map((textEntry: { text: string }) => textEntry.text);
+      });
+  };
 
   useEffect(() => {
-    const fetchImageData = () => {
-      return axios
-        .get("/api/images", {
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-          },
-        })
-        .then((res) => {
-          return res.data.map(
-            (imageEntry: { fileName: string }) => imageEntry.fileName
-          );
-        });
-    };
-
-    const fetchTextData = () => {
-      return axios
-        .get("/api/text", {
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-          },
-        })
-        .then((res) => {
-          return res.data.map((textEntry: { text: string }) => textEntry.text);
-        });
-    };
-
-    const getDifference = (
-      arr1: Array<string>,
-      arr2: Array<string>
-    ): Array<string> => {
-      return arr1.filter((x) => !arr2.includes(x));
-    };
-
-    const replaceItemsAtEnd = (arr1: Array<string>, arr2: Array<string>) => {
-      return arr1.slice(0, arr1.length - arr2.length).concat(arr2);
-    };
-
     const interval = setInterval(async () => {
       const textData = await fetchTextData();
       const imgData = await fetchImageData();
 
-      setImageState(imgData);
-      setTextState(textData);
-
-      //const imgDiff = getDifference(imgData, imageState);
-
-      const textDiff = getDifference(textData, textState);
-      const replaced = replaceItemsAtEnd(textState, textDiff);
-      console.log(replaced)
-      setTextPresentationalState(
-        replaced.map((text: string, idx: number) => (
-          <h1 key={idx} style={stylizeText()}>
+      if (textPresentationalState) {
+        const textDiff = getDifference(textData, textState);
+        const formattedTextDiff = textDiff.map((text: string) => (
+          // using the text value as key itself because when replacing the items from the array indices get messy
+          // this is fine since we have a no-duplicates rule.
+          <h1 key={text} style={stylizeText()}>
             {corruptText(text)}
           </h1>
-        ))
-      );
+        ));
+
+        setTextPresentationalState(
+          replaceItemsAtBeginning(textPresentationalState, formattedTextDiff)
+        );
+
+        setTextState(replaceItemsAtBeginning(textState, textDiff));
+      }
+
+      if (imagePresentationalState) {
+        const imgDiff = getDifference(imgData, imageState);
+        const formattedImgDiff = imgDiff.map((imgPath: string) => (
+          // same as above, using image paths as keys
+          <img key={imgPath} src={imgPath} alt="img" style={stylizeImg()}></img>
+        ));
+
+        if (imagePresentationalState.length < 10) {
+          setImagePresentationalState(
+            formattedImgDiff.concat(imagePresentationalState)
+          );
+          setImageState(imgDiff.concat(imageState));
+        } else {
+          setImagePresentationalState(
+            replaceItemsAtBeginning(imagePresentationalState, formattedImgDiff)
+          );
+
+          setImageState(replaceItemsAtBeginning(imageState, imgDiff));
+        }
+      }
     }, 3000);
 
     return () => {
       clearInterval(interval);
     };
-  }, [textState, imageState]);
+  });
+
+  useEffect(() => {
+    const initialSync = async () => {
+      const imgFetch = await fetchImageData();
+      const textFetch = await fetchTextData();
+
+      setTextState(textFetch);
+      setTextPresentationalState(
+        textFetch.map((text: string) => (
+          <h1 key={text} style={stylizeText()}>
+            {corruptText(text)}
+          </h1>
+        ))
+      );
+
+      setImageState(imgFetch);
+      setImagePresentationalState(
+        imgFetch.map((imgPath: string) => (
+          <img key={imgPath} src={imgPath} alt="img" style={stylizeImg()}></img>
+        ))
+      );
+    };
+
+    initialSync();
+  }, []);
 
   // call fetch functions once on load
   return (
     <React.Fragment>
-      <Topbar imageState={imageState} textState={textState} />
+      <Topbar />
       <MebiousPresentational
-        imageState={imageState}
         textPresentationalState={textPresentationalState}
+        imagePresentationalState={imagePresentationalState}
       />
     </React.Fragment>
   );
