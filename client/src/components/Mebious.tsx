@@ -70,11 +70,20 @@ const Mebious: React.FC = () => {
           </h1>
         ));
 
-        setTextPresentationalState(
-          replaceItemsAtBeginning(textPresentationalState, formattedTextDiff)
-        );
+        // if the len of entries is < 10 no point in replacing items at the beginning of the array
+        // just concat the diff with the current state
+        if (textPresentationalState.length < 10) {
+          setTextPresentationalState(
+            formattedTextDiff.concat(textPresentationalState)
+          );
+          setTextState(textDiff.concat(textState));
+        } else {
+          setTextPresentationalState(
+            replaceItemsAtBeginning(textPresentationalState, formattedTextDiff)
+          );
 
-        setTextState(replaceItemsAtBeginning(textState, textDiff));
+          setTextState(replaceItemsAtBeginning(textState, textDiff));
+        }
       }
 
       if (imagePresentationalState) {
