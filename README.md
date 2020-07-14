@@ -31,7 +31,7 @@ Server runs on port `8080` while the clientside is hosted on port `3000`.
 
 `GET /api/text/n` (n = Integer) -> Returns a JSON array of objects representing the last `n` text posts.
 
-`GET /api/image` -> Returns a JSON array of objects representing the last 20 image posts.
+`GET /api/image` -> Returns a JSON array of objects representing the last 10 image posts.
 
 `GET /api/image/n` (n = Integer) -> Returns a JSON array of objects representing the last `n` image posts.
 
