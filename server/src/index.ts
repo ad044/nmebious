@@ -42,8 +42,8 @@ createConnection({
   })
   .catch((error) => console.log(error));
 
-if (!fs.existsSync("./temp")) fs.mkdirSync("./temp");
-if (!fs.existsSync("./uploads")) fs.mkdirSync("./uploads");
+if (!fs.existsSync("./src/temp")) fs.mkdirSync("./temp");
+if (!fs.existsSync("./src/uploads")) fs.mkdirSync("./uploads");
 
 const port: number = 8080;
 app.listen(port, () => console.log("Starting server on port 8000..."));

@@ -56,31 +56,47 @@ const calculateAspectRatioFit = (
   return { width: srcWidth * ratio, height: srcHeight * ratio };
 };
 
-const formatAndSaveImage = (filePath: string, outputDest: string) => {
-  waitForFile(filePath, 5000).then(() => {
-    gm(filePath).identify((err: Error, data: gm.ImageInfo) => {
-      if (err) console.log(err);
+const tryFormatAndSaveImage = (
+  filePath: string,
+  outputDest: string
+): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    // waitForFile didn't work quite well, so this interval checks if GM can access the image data
+    // if it cant access it within 2 seconds it gives up
+    const gmCheckInterval = setInterval(() => {
       try {
-        const { width, height } = calculateAspectRatioFit(
-          data["size"]["width"],
-          data["size"]["width"],
-          300,
-          300
-        );
-        gm(filePath)
-          .resize(width, height)
-          .colorspace("gray")
-          .colors(3)
-          .modulate(50)
-          .colorize(0, genRandomNumBetween(10, 35), 0)
-          .write(outputDest, (err) => {
-            if (err) console.log(err);
-          });
+        gm(filePath).identify((err: Error, data: gm.ImageInfo) => {
+          if (!err) {
+            try {
+              const { width, height } = calculateAspectRatioFit(
+                data["size"]["width"],
+                data["size"]["width"],
+                300,
+                300
+              );
+              gm(filePath)
+                .resize(width, height)
+                .colorspace("gray")
+                .colors(3)
+                .modulate(50)
+                .colorize(0, genRandomNumBetween(10, 35), 0)
+                .write(outputDest, (err) => {
+                  if (err) reject(false);
+                  resolve(true);
+                });
+            } catch (err) {
+              console.log(err);
+            }
+          }
+        });
       } catch (err) {
         console.log(err);
-        return false;
       }
-    });
+    }, 500);
+    setTimeout(() => {
+      clearInterval(gmCheckInterval);
+      reject(false);
+    }, 5000);
   });
 };
 
@@ -107,7 +123,7 @@ const isImageDuplicate = async (hash: string) => {
 export {
   isImageDuplicate,
   validateImageMime,
-  formatAndSaveImage,
+  tryFormatAndSaveImage,
   waitForFile,
   sha1Hash,
 };

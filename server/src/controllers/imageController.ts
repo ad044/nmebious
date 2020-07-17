@@ -1,6 +1,6 @@
 import {
   validateImageMime,
-  formatAndSaveImage,
+  tryFormatAndSaveImage,
   sha1Hash,
   isImageDuplicate,
 } from "../utils/imageUtils";
@@ -57,26 +57,29 @@ const postImage = async (req: Request, res: Response) => {
     return res.status(400).send({ reason: "duplicate" });
 
   const outputDest = __dirname + "/../uploads/" + fileName + imageFormat;
-  formatAndSaveImage(filePath, outputDest);
+  tryFormatAndSaveImage(filePath, outputDest)
+    .then(() => {
+      const image = getRepository(Image).create({
+        fileName: fileName + imageFormat,
+        url: "",
+        stamp: stamp,
+        spawn: spawn,
+        ip: ip,
+        hash: hash,
+      });
 
-  // save image to db
-  const image = getRepository(Image).create({
-    fileName: fileName + imageFormat,
-    url: "",
-    stamp: stamp,
-    spawn: spawn,
-    ip: ip,
-    hash: hash,
-  });
+      getRepository(Image)
+        .manager.save(image)
+        .catch((err) => {
+          console.log(err);
+          return res.status(400).send({ reason: "error" });
+        });
 
-  getRepository(Image)
-    .manager.save(image)
-    .catch((err) => {
-      console.log(err);
-      return res.status(400).send({ reason: "error" });
+      res.send(200);
+    })
+    .catch(() => {
+      res.status(400).send({ reason: "error" });
     });
-
-  res.send(200);
 };
 
 export { postImage, getImages, getImagesTillN };

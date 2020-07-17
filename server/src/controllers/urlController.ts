@@ -1,6 +1,6 @@
 import {
   isImageDuplicate,
-  formatAndSaveImage,
+  tryFormatAndSaveImage,
   sha1Hash,
 } from "../utils/imageUtils";
 import { downloadImage } from "../utils/urlUtils";
@@ -40,26 +40,31 @@ const postUrl = async (req: Request, res: Response) => {
     return res.status(400).send({ reason: "duplicate" });
 
   const outputDest = __dirname + "/../uploads/" + fileName + imageFormat;
-  formatAndSaveImage(filePath, outputDest);
+  tryFormatAndSaveImage(filePath, outputDest)
+    .then(() => {
+      const image = getRepository(Image).create({
+        fileName: fileName + imageFormat,
+        url: req.body.imgUrl,
+        stamp: stamp,
+        spawn: spawn,
+        ip: ip,
+        hash: hash,
+      });
 
-  // save image to db
-  const image = getRepository(Image).create({
-    fileName: fileName + imageFormat,
-    url: req.body.imgUrl,
-    stamp: stamp,
-    spawn: spawn,
-    ip: ip,
-    hash: hash,
-  });
+      getRepository(Image)
+        .manager.save(image)
+        .catch((err) => {
+          console.log(err);
+          return res.status(400).send({ reason: "error" });
+        });
 
-  getRepository(Image)
-    .manager.save(image)
-    .catch((err) => {
-      console.log(err);
-      return res.status(400).send({ reason: "error" });
+      res.send(200);
+    })
+    .catch(() => {
+      res.status(400).send({ reason: "error" });
     });
 
-  res.send(200);
+  // save image to db
 };
 
 export { postUrl };
