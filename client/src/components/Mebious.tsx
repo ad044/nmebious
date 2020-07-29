@@ -15,6 +15,8 @@ const Mebious: React.FC = () => {
     Array<JSX.Element>
   >();
 
+  const [checked, setChecked] = useState(false);
+
   const getDifference = (
     arr1: Array<string>,
     arr2: Array<string>
@@ -57,53 +59,66 @@ const Mebious: React.FC = () => {
 
   useEffect(() => {
     const interval = setInterval(async () => {
-      const textData = await fetchTextData();
-      const imgData = await fetchImageData();
+      if (!checked) {
+        const textData = await fetchTextData();
+        const imgData = await fetchImageData();
 
-      if (textPresentationalState) {
-        const textDiff = getDifference(textData, textState);
-        const formattedTextDiff = textDiff.map((text: string) => (
-          // using the text value as key itself because when replacing the items from the array indices get messy
-          // this is fine since we have a no-duplicates rule.
-          <h1 key={text} style={stylizeText()}>
-            {corruptText(text)}
-          </h1>
-        ));
+        if (textPresentationalState) {
+          const textDiff = getDifference(textData, textState);
+          const formattedTextDiff = textDiff.map((text: string) => (
+            // using the text value as key itself because when replacing the items from the array indices get messy
+            // this is fine since we have a no-duplicates rule.
+            <h1 key={text} style={stylizeText()}>
+              {corruptText(text)}
+            </h1>
+          ));
 
-        // if the len of entries is < 10 no point in replacing items at the beginning of the array
-        // just concat the diff with the current state
-        if (textPresentationalState.length < 10) {
-          setTextPresentationalState(
-            formattedTextDiff.concat(textPresentationalState)
-          );
-          setTextState(textDiff.concat(textState));
-        } else {
-          setTextPresentationalState(
-            replaceItemsAtBeginning(textPresentationalState, formattedTextDiff)
-          );
+          // if the len of entries is < 10 no point in replacing items at the beginning of the array
+          // just concat the diff with the current state
+          if (textPresentationalState.length < 10) {
+            setTextPresentationalState(
+              formattedTextDiff.concat(textPresentationalState)
+            );
+            setTextState(textDiff.concat(textState));
+          } else {
+            setTextPresentationalState(
+              replaceItemsAtBeginning(
+                textPresentationalState,
+                formattedTextDiff
+              )
+            );
 
-          setTextState(replaceItemsAtBeginning(textState, textDiff));
+            setTextState(replaceItemsAtBeginning(textState, textDiff));
+          }
         }
-      }
 
-      if (imagePresentationalState) {
-        const imgDiff = getDifference(imgData, imageState);
-        const formattedImgDiff = imgDiff.map((imgPath: string) => (
-          // same as above, using image paths as keys
-          <img key={imgPath} src={imgPath} alt="img" style={stylizeImg()}></img>
-        ));
+        if (imagePresentationalState) {
+          const imgDiff = getDifference(imgData, imageState);
+          const formattedImgDiff = imgDiff.map((imgPath: string) => (
+            // same as above, using image paths as keys
+            <img
+              key={imgPath}
+              src={imgPath}
+              alt="img"
+              style={stylizeImg()}
+            ></img>
+          ));
 
-        if (imagePresentationalState.length < 10) {
-          setImagePresentationalState(
-            formattedImgDiff.concat(imagePresentationalState)
-          );
-          setImageState(imgDiff.concat(imageState));
-        } else {
-          setImagePresentationalState(
-            replaceItemsAtBeginning(imagePresentationalState, formattedImgDiff)
-          );
+          if (imagePresentationalState.length < 10) {
+            setImagePresentationalState(
+              formattedImgDiff.concat(imagePresentationalState)
+            );
+            setImageState(imgDiff.concat(imageState));
+          } else {
+            setImagePresentationalState(
+              replaceItemsAtBeginning(
+                imagePresentationalState,
+                formattedImgDiff
+              )
+            );
 
-          setImageState(replaceItemsAtBeginning(imageState, imgDiff));
+            setImageState(replaceItemsAtBeginning(imageState, imgDiff));
+          }
         }
       }
     }, 3000);
@@ -144,6 +159,8 @@ const Mebious: React.FC = () => {
       <Topbar />
       <MebiousPresentational
         textPresentationalState={textPresentationalState!}
+        setChecked={setChecked}
+        checked={checked}
         imagePresentationalState={imagePresentationalState!}
       />
     </React.Fragment>

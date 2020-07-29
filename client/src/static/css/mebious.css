@@ -60,3 +60,15 @@ a {
   color: red;
   display: inline;
 }
+#checkbox_container{
+  position: absolute;
+  bottom: 0; 
+  left: 0;
+  margin: 2em;
+  display:inline-block;
+}
+
+#checkbox{
+  display:block;
+  margin: 0 auto;
+}
