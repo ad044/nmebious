@@ -15,7 +15,6 @@
                #:str
                #:postmodern
                #:local-time
-               #:simple-date
                #:cl-postgres+local-time
                #:md5
                #:trivial-mimes
