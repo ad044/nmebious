@@ -23,9 +23,9 @@ Of course, before that we need to do some additional configuration:
 - PostgreSQL must be set up with 2 databases named `nmebious` and `test` (the second one is optional and only needed if you want to run the test suite).
 - Create a `.env` file with the following format:
 	```
-	DB_USER=user
-   	DB_PASS=password
-   	SECRET=secret
+   DB_USER=user
+   DB_PASS=password
+   SECRET=secret
    	```
   Where `DB_USER` and `DB_PASS` are the credentials for the Postgres database, and `SECRET` is the key used by HMAC to hash the IP addresses.
 
