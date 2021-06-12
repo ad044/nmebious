@@ -3,6 +3,7 @@
 (defun setup-db ()
   (query "CREATE TABLE IF NOT EXISTS post (
                 post_id                     SERIAL PRIMARY KEY,
+                board                       TEXT NOT NULL,
                 ip_hash                     TEXT NOT NULL,
                 submission_date             TIMESTAMP NOT NULL)")
   (query "CREATE TABLE IF NOT EXISTS text_post (
@@ -16,17 +17,19 @@
                 ip_hash                     TEXT NOT NULL
           )"))
 
-(defun insert-text-row (text-data ip-hash)
+(defun insert-text-row (board text-data ip-hash)
   (query  (:insert-rows-into 'text-post
-           :columns 'submission-date 'text-data 'ip-hash
+           :columns 'submission-date 'board 'text-data 'ip-hash
            :values `((,(format-timestring nil (now))
+                      ,board
                       ,text-data
                       ,ip-hash)))))
 
-(defun insert-file-row (filename checksum ip-hash)
+(defun insert-file-row (board filename checksum ip-hash)
   (query  (:insert-rows-into 'file-post
-           :columns 'submission-date 'filename 'checksum 'ip-hash
+           :columns 'submission-date 'board 'filename 'checksum 'ip-hash
            :values `((,(format-timestring nil (now))
+                      ,board
                       ,filename
                       ,checksum
                       ,ip-hash)))))

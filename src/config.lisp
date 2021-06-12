@@ -11,6 +11,11 @@
                                           "image/jpeg"
                                           "image/gif"))
 
+;; Boards (must be at least 1)
+(defparameter *boards* (list "b"
+                             "cyber"
+                             "lain"))
+
 ;; Where to store user uploaded content
 (defparameter *static-dir* (asdf:system-relative-pathname 'nmebious "static/"))
 

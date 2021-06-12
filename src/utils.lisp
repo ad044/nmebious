@@ -7,11 +7,19 @@
 (defun hex (bytes)
   (byte-array-to-hex-string bytes))
 
-(defmacro cassoc (item alist)
-  `(cdr (assoc ,item ,alist)))
+(defun cassoc (item alist &rest args &key &allow-other-keys)
+  (cdr (apply #'assoc item alist args)))
 
 (defun numeric-string-p (string)
   (ignore-errors (parse-integer string)))
+
+(defun format-image-link (filename)
+  (when filename
+    (format nil "~Astatic/~A" *web-url* filename)))
+
+(defun sort-posts-by-date (a b)
+  (timestamp< (cassoc :submission-date a)
+              (cassoc :submission-date b)))
 
 (defparameter *success* (encode-json-alist-to-string (pairlis '(status) '("Success"))))
 
@@ -50,7 +58,7 @@
                     (error #'fail))
        ,@body)))
 
-(defmacro with-allowed-check ((&key ip-hash checksum text-data content-type post-get-count)
+(defmacro with-allowed-check ((&key ip-hash checksum text-data content-type post-get-count board)
                               &body body)
   `(cond ((banned-p ,ip-hash)
           (throw-request-error "You are banned."))
@@ -69,6 +77,9 @@
          ((and ,text-data
                (> (length ,text-data) 255))
           (throw-request-error "Text too long."))
+         ((and ,board
+               (not (board-exists-p ,board)))
+          (throw-request-error "Board does not exist."))
          (t (progn
               ,@body))))
 
@@ -76,9 +87,12 @@
   (let* ((trimmed-n (string-trim '(#\Space #\Newline #\Backspace #\Tab
                                    #\Linefeed #\Page #\Return #\Rubout)
                                  n)))
-    (cond ((string-equal "" trimmed-n) 5)
+    (cond ((string= "" trimmed-n) 5)
           ((numeric-string-p trimmed-n) (parse-integer n))
           (t (throw-request-error (format nil  "Post count must be a number, got: ~A." trimmed-n))))))
+
+(defun board-exists-p (board)
+  (member board *boards* :test #'string=))
 
 ;; File saving/handling
 (defun gen-filename ()
@@ -98,11 +112,11 @@
   (member mime-type *accepted-mime-types* :test #'string=))
 
 (defun get-table-for-type (type)
-  (cond ((string-equal type "txt")
+  (cond ((string= type "txt")
          'text-post)
-        ((string-equal type "file")
+        ((string= type "file")
          'file-post)
-        ((string-equal type "all")
+        ((string= type "all")
          nil)
         (t (throw-request-error (format nil "Incorrect post type: ~A." type)))))
 
@@ -122,11 +136,3 @@
          (src-namestring (namestring src)))
     (ensure-directories-exist dest)
     (run-program (format-image src-namestring dest-namestring))))
-
-(defun sort-posts-by-date (a b)
-  (timestamp< (cassoc :submission-date a)
-              (cassoc :submission-date b)))
-
-(defun format-image-link (filename)
-  (when filename
-    (format nil "~Astatic/~A" *web-url* filename)))
