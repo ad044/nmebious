@@ -20,6 +20,7 @@
 ;; POST file
 (defroute submit-file ("/submit/file" :method :post) ()
   (with-fail-handler (submit-file)
+    (setf (hunchentoot:header-out "Access-Control-Allow-Origin") "*")
     (bind (((name src filename content-type) (or (assoc "file"
                                                         (post-parameters*)
                                                         :test #'string-equal)

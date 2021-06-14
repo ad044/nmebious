@@ -47,24 +47,25 @@
 
 (defun select-posts (count &key table board)
   (cond ((eql table 'text-post)
-         (pairlis '(txt) (list (select-posts-from-table table count 'text-data))))
+         (pairlis '(txt) (list (select-posts-from-table table count 'text-data board))))
         ((eql table 'file-post)
-         (pairlis '(file) (list (select-posts-from-table table count 'filename))))
+         (pairlis '(file) (list (select-posts-from-table table count 'filename board))))
         ((null table)
          (pairlis '(file txt)
-                  (list (select-posts-from-table 'file-post count 'filename)
-                        (select-posts-from-table 'text-post count 'text-data))))))
+                  (list (select-posts-from-table 'file-post count 'filename board)
+                        (select-posts-from-table 'text-post count 'text-data board))))))
 
 (defun exists-p (val table col)
   (query (:select '*
           :from table
           :where (:= col val))))
 
-(defun exists-with-limit-p (val ip-hash table col limit)
+(defun exists-with-limit-p (val ip-hash table col limit board)
   (query (:limit (:order-by (:select '*
                              :from table
                              :where (:and  (:= col val)
-                                           (:= 'ip-hash ip-hash)))
+                                           (:= 'ip-hash ip-hash)
+                                           (:= 'board board)))
                             (:desc 'post-id))
                  limit)))
 
@@ -82,8 +83,8 @@
   (query (:delete-from 'ban
           :where (:= 'ip-hash ip-hash))))
 
-(defun file-duplicate-p (checksum ip-hash limit)
-  (exists-with-limit-p checksum ip-hash'file-post 'checksum limit))
+(defun file-duplicate-p (checksum ip-hash limit board)
+  (exists-with-limit-p checksum ip-hash'file-post 'checksum limit board))
 
-(defun text-duplicate-p (text-data ip-hash limit)
-  (exists-with-limit-p text-data ip-hash 'text-post 'text-data limit))
+(defun text-duplicate-p (text-data ip-hash limit board)
+  (exists-with-limit-p text-data ip-hash 'text-post 'text-data limit board))

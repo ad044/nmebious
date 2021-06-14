@@ -205,10 +205,60 @@
         (is (string= message "Tried to retrieve too many posts."))))
 
     ;; incorrect board
-    (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts" "thisboarddoesnotexist"))
-      (let* ((json-body (cl-json:decode-json-from-string body))
-             (message (nmebious::cassoc :message json-body)))
-        (is (eql 400
-                 code))
-        (is (string= message "Board does not exist."))))))
+    (when (not (nmebious::board-exists-p "thisboarddoesnotexist"))
+      (multiple-value-bind (body code headers)
+          (dex:get (localhost "posts" "thisboarddoesnotexist"))
+        (let* ((json-body (cl-json:decode-json-from-string body))
+               (message (nmebious::cassoc :message json-body)))
+          (is (eql 400
+                   code))
+          (is (string= message "Board does not exist.")))))
+
+    ;; submit 1 to each board, check if length 2 with no board specified, check if 1 each
+    ;; and their boards are correct in json
+    (when (> (length nmebious::*boards*) 0)
+      (postmodern:query (:delete-from 'text-post))
+      (let* ((first-board (first nmebious::*boards*))
+             (second-board (second nmebious::*boards*)))
+
+        ;; insert random data
+        (dotimes (i 2)
+          (dexador:post  (localhost "submit" "txt")
+                         :content (cl-json:encode-json-alist-to-string
+                                   (pairlis '(txt board)
+                                            (list i first-board)))
+                         :headers '((:content-type . "application/json")))
+          (dexador:post  (localhost "submit" "txt")
+                         :content (cl-json:encode-json-alist-to-string
+                                   (pairlis '(txt board)
+                                            (list i second-board)))
+                         :headers '((:content-type . "application/json"))))
+
+        ;; check if 2 posts on first board
+        (multiple-value-bind (body code headers)
+            (dex:get (localhost "posts" (format nil "~A?type=txt" first-board)))
+          (let* ((json-body (cl-json:decode-json-from-string body)))
+            (is (eql (length json-body)
+                     1))
+            (is (eql (length (nmebious::cassoc :txt
+                                               json-body))
+                     2))))
+
+        ;; check if 2 posts on second board
+        (multiple-value-bind (body code headers)
+            (dex:get (localhost "posts" (format nil "~A?type=txt" second-board)))
+          (let* ((json-body (cl-json:decode-json-from-string body)))
+            (is (eql (length json-body)
+                     1))
+            (is (eql (length (nmebious::cassoc :txt
+                                               json-body))
+                     2))))
+
+        (multiple-value-bind (body code headers)
+            (dex:get (localhost "posts" "?type=txt"))
+          (let* ((json-body (cl-json:decode-json-from-string body)))
+            (is (eql (length json-body)
+                     1))
+            (is (eql (length (nmebious::cassoc :txt
+                                               json-body))
+                     4))))))))

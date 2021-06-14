@@ -51,6 +51,7 @@
             (encode-json-alist-to-string (pairlis '(message status)
                                                   (list e "Error")))))
         (fail (e)
+          (format *error-output* e)
           (send-error "Bad request."))
         (catch-error (e)
           (send-error (message e))))
@@ -67,9 +68,9 @@
           (throw-request-error (format nil "Content type not accepted: ~A." ,content-type)))
          ((and ,*allow-duplicates-after*
                (or (and ,checksum
-                        (file-duplicate-p ,checksum ,ip-hash ,*allow-duplicates-after*))
+                        (file-duplicate-p ,checksum ,ip-hash ,*allow-duplicates-after* ,board))
                    (and ,text-data
-                        (text-duplicate-p ,text-data ,ip-hash ,*allow-duplicates-after*))))
+                        (text-duplicate-p ,text-data ,ip-hash ,*allow-duplicates-after* ,board))))
           (throw-request-error "Duplicate post."))
          ((and ,post-get-count
                (> ,post-get-count ,*post-get-limit*))
