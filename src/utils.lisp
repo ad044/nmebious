@@ -83,13 +83,13 @@
          (t (progn
               ,@body))))
 
-(defun parse-get-count-from-string (n)
-  (let* ((trimmed-n (string-trim '(#\Space #\Newline #\Backspace #\Tab
+(defun parse-board-from-req (board)
+  (let* ((trimmed-board (string-trim '(#\Space #\Newline #\Backspace #\Tab
                                    #\Linefeed #\Page #\Return #\Rubout)
-                                 n)))
-    (cond ((string= "" trimmed-n) 5)
-          ((numeric-string-p trimmed-n) (parse-integer n))
-          (t (throw-request-error (format nil  "Post count must be a number, got: ~A." trimmed-n))))))
+                                 board)))
+    (cond ((string= "" trimmed-board) nil)
+          ((not (board-exists-p trimmed-board)) (throw-request-error "Board does not exist."))
+          (t trimmed-board))))
 
 (defun board-exists-p (board)
   (member board *boards* :test #'string=))

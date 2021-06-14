@@ -46,34 +46,34 @@
           *success*)))))
 
 ;; GET posts
-(defroute get-posts ("/posts/:type/:n" :method :get) ()
+(defroute get-posts ("/posts/:board" :method :get) ((type :init-form "all") (count :init-form 10 :parameter-type 'integer))
   (with-fail-handler (get-posts)
     (let* ((table (get-table-for-type type))
-           (count (parse-get-count-from-string n))
+           (board (parse-board-from-req board))
            (ip-hash (hash-ip (real-remote-addr))))
       (with-allowed-check (:ip-hash ip-hash
                            :post-get-count count)
-        (encode-json-alist-to-string (select-posts count table))))))
+        (encode-json-alist-to-string (select-posts count :table table :board board))))))
 
 ;; RSS feed
 (defroute rss-feed ("/rss" :method :get) ()
   (setf (content-type*) "application/rss+xml")
-  (let* ((posts (select-posts 30 nil))
-         (text-posts (cdar posts))
-         (file-posts (cdadr posts))
-         (all-posts (append text-posts
-                            file-posts))
-         (sorted-all-posts (sort all-posts
-                                 #'sort-posts-by-date)))
-
-    (with-output-to-string (s)
-      (with-rss2 (s :encoding "utf-8")
-        (rss-channel-header "nmebious" *web-url*
-                            :description "monitoring the wired")
-        (dolist (item sorted-all-posts)
-          (let* ((text-data (cassoc :text-data item))
-                 (file-data (cassoc :filename item)))
-            (rss-item nil
-                      :link (format-image-link file-data)
-                      :description text-data
-                      :pubDate (format-timestring nil (cassoc :submission-date item)))))))))
+  (with-fail-handler (rss-feed)
+    (let* ((posts (select-posts 30))
+           (text-posts (cdar posts))
+           (file-posts (cdadr posts))
+           (all-posts (append text-posts
+                              file-posts))
+           (sorted-all-posts (sort all-posts
+                                   #'sort-posts-by-date)))
+      (with-output-to-string (s)
+        (with-rss2 (s :encoding "utf-8")
+          (rss-channel-header "nmebious" *web-url*
+                              :description "monitoring the wired")
+          (dolist (item sorted-all-posts)
+            (let* ((text-data (cassoc :text-data item))
+                   (file-data (cassoc :filename item)))
+              (rss-item nil
+                        :link (format-image-link file-data)
+                        :description text-data
+                        :pubDate (format-timestring nil (cassoc :submission-date item))))))))))

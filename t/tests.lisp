@@ -136,7 +136,15 @@
     ;; unsupported format
     (when (not (nmebious::mime-type-accepted-p "image/tiff"))
       (with-submit-file ("test.tiff" test-board)
-        (expect-error-with-message "Content type not accepted: image/tiff." )))))
+        (expect-error-with-message "Content type not accepted: image/tiff." )))
+
+    ;; incorrectly named key
+    (multiple-value-bind (body code headers uri)
+        (dex:post (localhost "submit" "file")
+                  :content (pairlis '(test board)
+                                    (list (test-file "test.jpg") test-board)))
+      (declare (ignore headers uri))
+      (expect-error-with-message "No file data found."))))
 
 (test get-posts
   (with-fixture test-env ()

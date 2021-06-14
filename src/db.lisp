@@ -34,13 +34,18 @@
                       ,checksum
                       ,ip-hash)))))
 
-(defun select-posts-from-table (table count col)
-  (query (:limit (:order-by (:select col 'submission-date :from table)
-                            (:desc 'post-id))
-                 count)
-         :alists))
+(defun select-posts-from-table (table count col &optional board)
+  (if board
+      (query (:limit (:order-by (:select col 'submission-date :from table :where (:= 'board board))
+                                (:desc 'post-id))
+                     count)
+             :alists)
+      (query (:limit (:order-by (:select col 'submission-date :from table)
+                                (:desc 'post-id))
+                     count)
+             :alists)))
 
-(defun select-posts (count &optional table)
+(defun select-posts (count &key table board)
   (cond ((eql table 'text-post)
          (pairlis '(txt) (list (select-posts-from-table table count 'text-data))))
         ((eql table 'file-post)
