@@ -46,7 +46,8 @@
           *success*)))))
 
 ;; GET posts
-(defroute get-posts ("/posts/:board" :method :get) ((type :init-form "all") (count :init-form 10 :parameter-type 'integer))
+(defroute get-posts ("/posts/:board" :method :get)
+    ((type :init-form "all") (count :init-form 10 :parameter-type 'integer))
   (with-fail-handler (get-posts)
     (let* ((table (get-table-for-type type))
            (board (parse-board-from-req board))

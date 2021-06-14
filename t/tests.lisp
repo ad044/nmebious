@@ -152,8 +152,8 @@
     (dotimes (i 3)
       (dexador:post  (localhost "submit" "txt")
                      :content (cl-json:encode-json-alist-to-string
-                                (pairlis '(txt board)
-                                         (list i test-board)))
+                               (pairlis '(txt board)
+                                        (list i test-board)))
                      :headers '((:content-type . "application/json"))))
     (dex:post (localhost "submit" "file")
               :content (pairlis '(file board)
@@ -161,7 +161,7 @@
 
     ;; retrieving all types of posts
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts" "all/"))
+        (dex:get (localhost "posts/"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
                  2))
@@ -174,7 +174,7 @@
 
     ;; retrieving only text posts
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts" "txt/"))
+        (dex:get (localhost "posts" "?type=txt"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
                  1))
@@ -184,7 +184,7 @@
 
     ;; retriveing only 2 text posts
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts" "txt" "2"))
+        (dex:get (localhost "posts" "?type=txt&count=2"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
                  1))
@@ -192,21 +192,23 @@
                                            json-body))
                  2))))
 
-    ;; invalid input for post count
-    (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts" "txt" "test"))
-      (let* ((json-body (cl-json:decode-json-from-string body))
-             (message (nmebious::cassoc :message json-body)))
-        (is (eql 400
-                 code))
-        (is (string= message "Post count must be a number, got: test."))))
-
     ;; retrieving too many posts
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts" "txt" (write-to-string (+ 1
-                                                              nmebious::*post-get-limit*))))
+        (dex:get (localhost "posts" (format nil
+                                            "?type=txt&count=~A"
+                                            (write-to-string (+ 1
+                                                                nmebious::*post-get-limit*)))))
       (let* ((json-body (cl-json:decode-json-from-string body))
              (message (nmebious::cassoc :message json-body)))
         (is (eql 400
                  code))
-        (is (string= message "Tried to retrieve too many posts."))))))
+        (is (string= message "Tried to retrieve too many posts."))))
+
+    ;; incorrect board
+    (multiple-value-bind (body code headers)
+        (dex:get (localhost "posts" "thisboarddoesnotexist"))
+      (let* ((json-body (cl-json:decode-json-from-string body))
+             (message (nmebious::cassoc :message json-body)))
+        (is (eql 400
+                 code))
+        (is (string= message "Board does not exist."))))))

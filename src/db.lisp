@@ -36,11 +36,11 @@
 
 (defun select-posts-from-table (table count col &optional board)
   (if board
-      (query (:limit (:order-by (:select col 'submission-date :from table :where (:= 'board board))
+      (query (:limit (:order-by (:select col 'submission-date 'board :from table :where (:= 'board board))
                                 (:desc 'post-id))
                      count)
              :alists)
-      (query (:limit (:order-by (:select col 'submission-date :from table)
+      (query (:limit (:order-by (:select col 'submission-date 'board :from table)
                                 (:desc 'post-id))
                      count)
              :alists)))
