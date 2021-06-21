@@ -20,8 +20,7 @@
 ;; POST file
 (defroute submit-file ("/submit/file" :method :post) ()
   (with-fail-handler (submit-file)
-    (setf (hunchentoot:header-out "Access-Control-Allow-Origin") "*")
-    (bind (((name src filename content-type) (or (assoc "file"
+    (bind (((src filename content-type) (or (cassoc "file"
                                                         (post-parameters*)
                                                         :test #'string-equal)
                                                  (throw-request-error "No file data found.")))
@@ -44,6 +43,7 @@
           (format-and-save-file src
                                 dest)
           (insert-file-row board full-filename checksum ip-hash)
+          (hunchensocket:send-text-message "hello")
           *success*)))))
 
 ;; GET posts
@@ -79,3 +79,6 @@
                         :link (format-image-link file-data)
                         :description text-data
                         :pubDate (format-timestring nil (cassoc :submission-date item))))))))))
+
+(defroute boards ("/boards" :method :get) ()
+  (encode-json-alist-to-string (acons 'boards *boards* nil)))

@@ -254,6 +254,7 @@
                                                json-body))
                      2))))
 
+        ;; both together should be 4
         (multiple-value-bind (body code headers)
             (dex:get (localhost "posts" "?type=txt"))
           (let* ((json-body (cl-json:decode-json-from-string body)))
@@ -262,3 +263,13 @@
             (is (eql (length (nmebious::cassoc :txt
                                                json-body))
                      4))))))))
+
+
+(test get-boards
+  (with-fixture test-env ()
+    ;; check if get boards works
+    (multiple-value-bind (body code headers)
+        (dex:get (localhost "boards"))
+      (let* ((json-body (cl-json:decode-json-from-string body)))
+        (is  (equalp (nmebious::cassoc :boards  json-body)
+                     nmebious::*boards*))))))

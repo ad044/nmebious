@@ -20,7 +20,8 @@
                #:trivial-mimes
                #:cl-dotenv
                #:swank
-               #:xml-emitter)
+               #:xml-emitter
+               #:hunchensocket)
   :components ((:module "src"
                 :components
                 ((:file "package")

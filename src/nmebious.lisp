@@ -4,6 +4,8 @@
                                       :port *port*
                                       :document-root nil))
 
+(defvar *socket-server* (make-instance 'hunchensocket:websocket-acceptor :port 12345))
+
 (defun start-db ()
   (push (hunchentoot:create-folder-dispatcher-and-handler
          "/static/" *static-dir*)
@@ -17,10 +19,12 @@
 
 (defun start-hunchentoot ()
   (setf *default-content-type* "application/json")
-  (start *server*))
+  (start *server*)
+  (start *socket-server*))
 
 (defun stop-hunchentoot ()
-  (stop *server*))
+  (stop *server*)
+  (stop *socket-server*))
 
 (defun start-server ()
   (start-db)

@@ -51,7 +51,7 @@
             (encode-json-alist-to-string (pairlis '(message status)
                                                   (list e "Error")))))
         (fail (e)
-          (format *error-output* e)
+          (format *error-output* "Error: ~A~%" e)
           (send-error "Bad request."))
         (catch-error (e)
           (send-error (message e))))
