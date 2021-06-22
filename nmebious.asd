@@ -29,5 +29,6 @@
                  (:file "db")
                  (:file "utils")
                  (:file "nmebious")
-                 (:file "routes"))))
+                 (:file "routes")
+                 (:file "sockets"))))
   :in-order-to ((test-op (test-op "nmebious-test"))))

@@ -15,6 +15,7 @@
                            :ip-hash ip-hash
                            :text-data formatted-text)
         (insert-text-row board formatted-text ip-hash)
+        (broadcast-text formatted-text board)
         *success*))))
 
 ;; POST file
@@ -43,7 +44,7 @@
           (format-and-save-file src
                                 dest)
           (insert-file-row board full-filename checksum ip-hash)
-          (hunchensocket:send-text-message "hello")
+          (broadcast-file full-filename board)
           *success*)))))
 
 ;; GET posts
