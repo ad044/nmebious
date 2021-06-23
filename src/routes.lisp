@@ -14,9 +14,14 @@
       (with-allowed-check (:board board
                            :ip-hash ip-hash
                            :text-data formatted-text)
-        (insert-text-row board formatted-text ip-hash)
-        (broadcast-text formatted-text board)
-        *success*))))
+        (let* ((post-id (caar (insert-text-row board
+                                               formatted-text
+                                               ip-hash))))
+          (broadcast :type "txt"
+                     :post-id post-id
+                     :data formatted-text
+                     :board board)
+          *success*)))))
 
 ;; POST file
 (defroute submit-file ("/submit/file" :method :post) ()
@@ -43,9 +48,15 @@
                                     :type type)))
           (format-and-save-file src
                                 dest)
-          (insert-file-row board full-filename checksum ip-hash)
-          (broadcast-file full-filename board)
-          *success*)))))
+          (let* ((post-id (caar (insert-file-row board
+                                                 full-filename
+                                                 checksum
+                                                 ip-hash))))
+            (broadcast :type "file"
+                       :post-id post-id
+                       :data full-filename
+                       :board board)
+            *success*))))))
 
 ;; GET posts
 (defroute get-posts ("/posts/:board" :method :get)

@@ -14,14 +14,8 @@
 
 (pushnew 'connect hunchensocket:*websocket-dispatch-table*)
 
-(defun broadcast (type data board)
+(defun broadcast (&key type post-id data board)
   (loop for peer in (hunchensocket:clients *board-listener-instance*)
         do (hunchensocket:send-text-message peer
-                                            (encode-json-alist-to-string (pairlis '(type data board)
-                                                                                  (list type data board))))))
-
-(defun broadcast-text (text board)
-  (broadcast "txt" text board))
-
-(defun broadcast-file (url board)
-  (broadcast "file" url board))
+                                            (encode-json-alist-to-string (pairlis '(type post-id data board)
+                                                                                  (list type post-id data board))))))

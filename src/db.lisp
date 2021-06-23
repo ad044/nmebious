@@ -23,7 +23,8 @@
            :values `((,(format-timestring nil (now))
                       ,board
                       ,text-data
-                      ,ip-hash)))))
+                      ,ip-hash))
+           :returning 'post-id)))
 
 (defun insert-file-row (board filename checksum ip-hash)
   (query  (:insert-rows-into 'file-post
@@ -32,15 +33,16 @@
                       ,board
                       ,filename
                       ,checksum
-                      ,ip-hash)))))
+                      ,ip-hash))
+           :returning 'post-id)))
 
 (defun select-posts-from-table (table count col &optional board)
   (if board
-      (query (:limit (:order-by (:select col 'submission-date 'board :from table :where (:= 'board board))
+      (query (:limit (:order-by (:select 'post-id col 'submission-date 'board :from table :where (:= 'board board))
                                 (:desc 'post-id))
                      count)
              :alists)
-      (query (:limit (:order-by (:select col 'submission-date 'board :from table)
+      (query (:limit (:order-by (:select 'post-id col 'submission-date 'board :from table)
                                 (:desc 'post-id))
                      count)
              :alists)))

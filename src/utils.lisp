@@ -78,6 +78,9 @@
          ((and ,text-data
                (> (length ,text-data) 255))
           (throw-request-error "Text too long."))
+         ((and ,text-data
+               (eql (length ,text-data) 0))
+          (throw-request-error "The submitted text can't be empty."))
          ((and ,board
                (not (board-exists-p ,board)))
           (throw-request-error "Board does not exist."))
