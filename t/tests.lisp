@@ -262,7 +262,27 @@
                      1))
             (is (eql (length (nmebious::cassoc :txt
                                                json-body))
-                     4))))))))
+                     4))))
+
+        ;; offset works
+        (multiple-value-bind (body code headers)
+            (dex:get (localhost "posts" "?type=txt&offset=1"))
+          (let* ((json-body (cl-json:decode-json-from-string body)))
+            (is (eql (length json-body)
+                     1))
+            (is (eql (length (nmebious::cassoc :txt
+                                               json-body))
+                     3))))
+
+        ;; count works
+        (multiple-value-bind (body code headers)
+            (dex:get (localhost "posts" "?type=txt&count=1"))
+          (let* ((json-body (cl-json:decode-json-from-string body)))
+            (is (eql (length json-body)
+                     1))
+            (is (eql (length (nmebious::cassoc :txt
+                                               json-body))
+                     1))))))))
 
 
 (test get-boards

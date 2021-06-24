@@ -36,26 +36,28 @@
                       ,ip-hash))
            :returning 'post-id)))
 
-(defun select-posts-from-table (table count col &optional board)
+(defun select-posts-from-table (table count col &optional board offset)
   (if board
       (query (:limit (:order-by (:select 'post-id col 'submission-date 'board :from table :where (:= 'board board))
                                 (:desc 'post-id))
-                     count)
+                     count
+                     offset)
              :alists)
       (query (:limit (:order-by (:select 'post-id col 'submission-date 'board :from table)
                                 (:desc 'post-id))
-                     count)
+                     count
+                     offset)
              :alists)))
 
-(defun select-posts (count &key table board)
+(defun select-posts (count &key table board offset)
   (cond ((eql table 'text-post)
-         (pairlis '(txt) (list (select-posts-from-table table count 'text-data board))))
+         (pairlis '(txt) (list (select-posts-from-table table count 'text-data board offset))))
         ((eql table 'file-post)
-         (pairlis '(file) (list (select-posts-from-table table count 'filename board))))
+         (pairlis '(file) (list (select-posts-from-table table count 'filename board offset))))
         ((null table)
          (pairlis '(file txt)
-                  (list (select-posts-from-table 'file-post count 'filename board)
-                        (select-posts-from-table 'text-post count 'text-data board))))))
+                  (list (select-posts-from-table 'file-post count 'filename board offset)
+                        (select-posts-from-table 'text-post count 'text-data board offset))))))
 
 (defun exists-p (val table col)
   (query (:select '*

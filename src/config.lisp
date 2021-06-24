@@ -18,7 +18,7 @@
 (defparameter *static-dir* (asdf:system-relative-pathname 'nmebious "static/"))
 
 ;; Limit how many posts a user can retreive at once using the API
-(defparameter *post-get-limit* 50)
+(defparameter *post-get-limit* 1000)
 
 ;; After how many posts can a user post a duplicate
 ;; Set to NIL to disable duplicate checking

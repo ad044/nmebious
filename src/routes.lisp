@@ -60,14 +60,18 @@
 
 ;; GET posts
 (defroute get-posts ("/posts/:board" :method :get)
-    ((type :init-form "all") (count :init-form 10 :parameter-type 'integer))
+    ((type :init-form "all")
+     (count :init-form 15 :parameter-type 'integer)
+     (offset :init-form 0 :parameter-type 'integer))
   (with-fail-handler (get-posts)
     (let* ((table (get-table-for-type type))
            (board (parse-board-from-req board))
            (ip-hash (hash-ip (real-remote-addr))))
       (with-allowed-check (:ip-hash ip-hash
                            :post-get-count count)
-        (encode-json-alist-to-string (select-posts count :table table :board board))))))
+        (encode-json-alist-to-string (select-posts count :table table
+                                                         :board board
+                                                         :offset offset))))))
 
 ;; RSS feed
 (defroute rss-feed ("/rss" :method :get) ()
