@@ -20,11 +20,13 @@
 (defun start-hunchentoot ()
   (setf *default-content-type* "application/json")
   (start *server*)
-  (start *socket-server*))
+  (start *socket-server*)
+  (schedule-ping-timer))
 
 (defun stop-hunchentoot ()
   (stop *server*)
-  (stop *socket-server*))
+  (stop *socket-server*)
+  (unschedule-ping-timer))
 
 (defun start-server ()
   (start-db)

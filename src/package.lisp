@@ -1,5 +1,12 @@
 (defpackage #:nmebious
   (:use #:cl)
+  (:shadowing-import-from #:hunchensocket
+                          #:websocket-resource
+                          #:websocket-client
+                          #:*websocket-dispatch-table*
+                          #:clients
+                          #:send-text-message
+                          #:send-binary-message)
   (:shadowing-import-from #:xml-emitter
                           #:with-rss2
                           #:rss-channel-header
@@ -46,7 +53,8 @@
                           #:+http-bad-request+
                           #:*default-content-type*
                           #:content-type*
-                          #:header-out)
+                          #:header-out
+                          #:script-name)
   (:shadowing-import-from #:easy-routes
                           #:defroute)
   (:export #:start-server
