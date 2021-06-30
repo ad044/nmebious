@@ -74,10 +74,11 @@
                                                          :offset offset))))))
 
 ;; RSS feed
-(defroute rss-feed ("/rss" :method :get) ()
+(defroute rss-feed ("/rss" :method :get)
+    ((page :init-form 0 :parameter-type 'integer))
   (setf (content-type*) "application/rss+xml")
   (with-fail-handler (rss-feed)
-    (let* ((posts (select-posts 30))
+    (let* ((posts (select-posts 30 :offset (* page 30)))
            (text-posts (cdar posts))
            (file-posts (cdadr posts))
            (all-posts (append text-posts
