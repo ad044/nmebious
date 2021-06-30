@@ -20,7 +20,7 @@
 ;; Background for each board (simply put filenames in the same order as *boards*)
 ;; If you don't want a specific board to have a background, just put NIL at that point
 ;; If you don't want any backgrounds, just set this parameter to NIL
-;; These files should be put inside static/<filename>, where the filenames are the entries
+;; These files should be put inside static/bg/<filename>, where the filenames are the entries
 ;; from this list
 (defparameter *backgrounds* (list "main.jpg" "second.jpg"))
 
