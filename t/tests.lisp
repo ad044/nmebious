@@ -285,11 +285,19 @@
                      1))))))))
 
 
-(test get-boards
+(test get-server-config
   (with-fixture test-env ()
-    ;; check if get boards works
+    ;; check if get server parameters works
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "boards"))
+        (dex:get (localhost "config"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is  (equalp (nmebious::cassoc :boards  json-body)
-                     nmebious::*boards*))))))
+                     nmebious::*boards*))
+        (is (equalp (nmebious::cassoc :post-get-limit json-body)
+                    nmebious::*post-get-limit*))
+        (is (equalp (nmebious::cassoc :backgrounds json-body)
+                    nmebious::*backgrounds*))
+        (is (equalp (nmebious::cassoc :accepted-mime-types json-body)
+                    nmebious::*accepted-mime-types*))
+        (is (equalp (nmebious::cassoc :max-file-size json-body)
+                    nmebious::*max-file-size*))))))

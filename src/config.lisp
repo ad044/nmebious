@@ -14,8 +14,11 @@
 ;; Boards (must be at least 1)
 (defparameter *boards* (list "main" "second"))
 
+;; Publically served static files
+(defparameter *static-dir* (asdf:system-relative-pathname 'nmebious "static/"))
+
 ;; Where to store user uploaded content
-(defparameter *static-dir* (asdf:system-relative-pathname 'nmebious "static/uploads/"))
+(defparameter *uploads-dir* (asdf:system-relative-pathname 'nmebious "static/uploads/"))
 
 ;; Background for each board (simply put filenames in the same order as *boards*)
 ;; If you don't want a specific board to have a background, just put NIL at that point
