@@ -15,7 +15,14 @@
 (defparameter *boards* (list "main" "second"))
 
 ;; Where to store user uploaded content
-(defparameter *static-dir* (asdf:system-relative-pathname 'nmebious "static/"))
+(defparameter *static-dir* (asdf:system-relative-pathname 'nmebious "static/uploads/"))
+
+;; Background for each board (simply put filenames in the same order as *boards*)
+;; If you don't want a specific board to have a background, just put NIL at that point
+;; If you don't want any backgrounds, just set this parameter to NIL
+;; These files should be put inside static/<filename>, where the filenames are the entries
+;; from this list
+(defparameter *backgrounds* (list "main.jpg" "second.jpg"))
 
 ;; Limit how many posts a user can retreive at once using the API
 (defparameter *post-get-limit* 1000)
@@ -35,3 +42,6 @@
 
 ;; HMAC secret
 (defparameter *secret* (gethash "SECRET" *env*))
+
+;; Maximum file size (in mbs)
+(defparameter *max-file-size* (parse-integer (gethash "MAX_FILE_SIZE" *env*)))

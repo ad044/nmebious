@@ -96,5 +96,8 @@
                         :description text-data
                         :pubDate (format-timestring nil (cassoc :submission-date item))))))))))
 
-(defroute boards ("/boards" :method :get) ()
-  (encode-json-alist-to-string (acons 'boards *boards* nil)))
+;; Server configuration
+(defroute config ("/config" :method :get) ()
+  (with-fail-handler (config)
+    (encode-json-alist-to-string (pairlis '(boards backgrounds accepted-mime-types post-get-limit max-file-size)
+                                          (list  *boards* *backgrounds* *accepted-mime-types* *post-get-limit* *max-file-size*)))))
