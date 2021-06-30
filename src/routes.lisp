@@ -84,15 +84,19 @@
            (all-posts (append text-posts
                               file-posts))
            (sorted-all-posts (sort all-posts
-                                   #'sort-posts-by-date)))
+                                   #'sort-posts-by-id)))
       (with-output-to-string (s)
         (with-rss2 (s :encoding "utf-8")
           (rss-channel-header "nmebious" *web-url*
                               :description "monitoring the wired")
           (dolist (item sorted-all-posts)
             (let* ((text-data (cassoc :text-data item))
-                   (file-data (cassoc :filename item)))
+                   (file-data (cassoc :filename item))
+                   (id (cassoc :post-id item))
+                   (board (cassoc :board item)))
               (rss-item nil
+                        :guid id
+                        :category board
                         :link (format-image-link file-data)
                         :description text-data
                         :pubDate (format-timestring nil (cassoc :submission-date item))))))))))

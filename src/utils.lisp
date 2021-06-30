@@ -17,9 +17,9 @@
   (when filename
     (format nil "~Astatic/~A" *web-url* filename)))
 
-(defun sort-posts-by-date (a b)
-  (timestamp< (cassoc :submission-date a)
-              (cassoc :submission-date b)))
+(defun sort-posts-by-id (a b)
+  (> (cassoc :post-id a)
+     (cassoc :post-id b)))
 
 (defparameter *success* (encode-json-alist-to-string (pairlis '(status) '("Success"))))
 
