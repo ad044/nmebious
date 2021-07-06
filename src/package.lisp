@@ -25,9 +25,11 @@
                           #:set-local-time-cl-postgres-readers
                           #:now)
   (:shadowing-import-from #:md5
-                          #:md5sum-file)
+                          #:md5sum-file
+                          #:md5sum-string)
   (:shadowing-import-from #:postmodern
                           #:query
+                          #:sql-compile
                           #:connect-toplevel
                           #:disconnect-toplevel)
   (:shadowing-import-from #:str

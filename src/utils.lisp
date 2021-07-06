@@ -18,8 +18,11 @@
     (format nil "~Astatic/~A" *web-url* filename)))
 
 (defun sort-posts-by-id (a b)
-  (> (cassoc :post-id a)
-     (cassoc :post-id b)))
+  (> (cassoc :id a)
+     (cassoc :id b)))
+
+(defun construct-where-clause (type board)
+  )
 
 (defparameter *success* (encode-json-alist-to-string (pairlis '(status) '("Success"))))
 
@@ -59,7 +62,7 @@
                     (error #'fail))
        ,@body)))
 
-(defmacro with-allowed-check ((&key ip-hash checksum text-data content-type post-get-count board)
+(defmacro with-allowed-check ((&key ip-hash checksum text-data content-type post-get-count board type)
                               &body body)
   `(cond ((banned-p ,ip-hash)
           (throw-request-error "You are banned."))
@@ -67,10 +70,8 @@
                (not (mime-type-accepted-p ,content-type)))
           (throw-request-error (format nil "Content type not accepted: ~A." ,content-type)))
          ((and ,*allow-duplicates-after*
-               (or (and ,checksum
-                        (file-duplicate-p ,checksum ,ip-hash ,*allow-duplicates-after* ,board))
-                   (and ,text-data
-                        (text-duplicate-p ,text-data ,ip-hash ,*allow-duplicates-after* ,board))))
+               ,checksum
+               (post-duplicate-p ,checksum ,ip-hash ,*allow-duplicates-after* ,board))
           (throw-request-error "Duplicate post."))
          ((and ,post-get-count
                (> ,post-get-count ,*post-get-limit*))
@@ -84,6 +85,10 @@
          ((and ,board
                (not (board-exists-p ,board)))
           (throw-request-error "Board does not exist."))
+         ((and ,type
+               (not (or (string= type "txt")
+                        (string= type "file"))))
+          (throw-request-error "Incorrect type."))
          (t (progn
               ,@body))))
 
@@ -114,15 +119,6 @@
 
 (defun mime-type-accepted-p (mime-type)
   (member mime-type *accepted-mime-types* :test #'string=))
-
-(defun get-table-for-type (type)
-  (cond ((string= type "txt")
-         'text-post)
-        ((string= type "file")
-         'file-post)
-        ((string= type "all")
-         nil)
-        (t (throw-request-error (format nil "Incorrect post type: ~A." type)))))
 
 (defun format-image (src dest)
   (list "convert"

@@ -10,14 +10,19 @@
                       (throw-request-error "No board data found.")))
            (submitted-text (or (cassoc :txt json)
                                (throw-request-error "No text data found in body.")))
-           (formatted-text (format nil "~A" submitted-text)))
+           (formatted-text (format nil "~A" submitted-text))
+           (checksum (hex (md5sum-string formatted-text))))
+      (format t "sdsds~Adsds" formatted-text)
       (with-allowed-check (:board board
                            :ip-hash ip-hash
-                           :text-data formatted-text)
-        (let* ((post-id (caar (insert-text-row board
-                                               formatted-text
-                                               ip-hash))))
-          (broadcast :type "txt"
+                           :text-data formatted-text
+                           :checksum checksum)
+        (let* ((post-id (caar (insert-post formatted-text
+                                           checksum
+                                           "txt"
+                                           board
+                                           ip-hash))))
+          (broadcast :type 'text
                      :post-id post-id
                      :data formatted-text
                      :board board)
@@ -48,11 +53,12 @@
                                     :type type)))
           (format-and-save-file src
                                 dest)
-          (let* ((post-id (caar (insert-file-row board
-                                                 full-filename
-                                                 checksum
-                                                 ip-hash))))
-            (broadcast :type "file"
+          (let* ((post-id (caar (insert-post full-filename
+                                             checksum
+                                             "file"
+                                             board
+                                             ip-hash))))
+            (broadcast :type 'file
                        :post-id post-id
                        :data full-filename
                        :board board)
@@ -60,39 +66,37 @@
 
 ;; GET posts
 (defroute get-posts ("/posts/:board" :method :get)
-    ((type :init-form "all")
+    ((type :parameter-type 'string)
      (count :init-form 15 :parameter-type 'integer)
      (offset :init-form 0 :parameter-type 'integer))
   (with-fail-handler (get-posts)
-    (let* ((table (get-table-for-type type))
-           (board (parse-board-from-req board))
+    (let* ((board (parse-board-from-req board))
            (ip-hash (hash-ip (real-remote-addr))))
       (with-allowed-check (:ip-hash ip-hash
-                           :post-get-count count)
-        (encode-json-alist-to-string (select-posts count :table table
-                                                         :board board
-                                                         :offset offset))))))
+                           :post-get-count count
+                           :type type)
+        (encode-json-alist-to-string (pairlis '(posts)
+                                              (list (select-posts count
+                                                                  offset
+                                                                  type
+                                                                  board))))))))
 
 ;; RSS feed
 (defroute rss-feed ("/rss" :method :get)
     ((page :init-form 0 :parameter-type 'integer))
   (setf (content-type*) "application/rss+xml")
   (with-fail-handler (rss-feed)
-    (let* ((posts (select-posts 30 :offset (* page 30)))
-           (text-posts (cdar posts))
-           (file-posts (cdadr posts))
-           (all-posts (append text-posts
-                              file-posts))
-           (sorted-all-posts (sort all-posts
-                                   #'sort-posts-by-id)))
+    (let* ((posts (select-posts 30 (* page 30)))
+           (sorted-posts (sort posts
+                               #'sort-posts-by-id)))
       (with-output-to-string (s)
         (with-rss2 (s :encoding "utf-8")
           (rss-channel-header "nmebious" *web-url*
                               :description "monitoring the wired")
-          (dolist (item sorted-all-posts)
+          (dolist (item sorted-posts)
             (let* ((text-data (cassoc :text-data item))
                    (file-data (cassoc :filename item))
-                   (id (cassoc :post-id item))
+                   (id (cassoc :id item))
                    (board (cassoc :board item)))
               (rss-item nil
                         :guid id

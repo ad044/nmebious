@@ -32,7 +32,7 @@
 
 ;; After how many posts can a user post a duplicate
 ;; Set to NIL to disable duplicate checking
-(defparameter *allow-duplicates-after* nil)
+(defparameter *allow-duplicates-after* 5)
 
 ;; Env file
 (defparameter *env* (read-env (asdf:system-relative-pathname 'nmebious ".env")))

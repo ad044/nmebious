@@ -20,8 +20,7 @@
                                             nmebious::*db-pass*
                                             "localhost")
                (nmebious::setup-db)
-               (postmodern:query (:delete-from 'text-post))
-               (postmodern:query (:delete-from 'file-post))
+               (postmodern:query (:delete-from 'post))
                (handler-bind ((dex:http-request-failed #'dex:ignore-and-continue))
                  (&body)))
           (progn
@@ -72,7 +71,7 @@
 
 (test submit-text
   (with-fixture test-env ()
-    (postmodern:query (:delete-from 'text-post))
+    (postmodern:query (:delete-from 'post))
 
     ;; random string
     (with-submit-text ("firsttest" test-board)
@@ -120,7 +119,7 @@
 
 (test submit-file
   (with-fixture test-env ()
-    (postmodern:query (:delete-from 'file-post))
+    (postmodern:query (:delete-from 'post))
 
     ;; jpg image (supported format)
     (when (nmebious::mime-type-accepted-p "image/jpeg")
@@ -164,13 +163,10 @@
         (dex:get (localhost "posts/"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
-                 2))
-        (is (eql (length (nmebious::cassoc :txt
+                 1))
+        (is (eql (length (nmebious::cassoc :posts
                                            json-body))
-                 3))
-        (is (eql (length (nmebious::cassoc :file
-                                           json-body))
-                 1))))
+                 4))))
 
     ;; retrieving only text posts
     (multiple-value-bind (body code headers)
@@ -178,7 +174,7 @@
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
                  1))
-        (is (eql (length (nmebious::cassoc :txt
+        (is (eql (length (nmebious::cassoc :posts
                                            json-body))
                  3))))
 
@@ -188,9 +184,19 @@
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
                  1))
-        (is (eql (length (nmebious::cassoc :txt
+        (is (eql (length (nmebious::cassoc :posts
                                            json-body))
                  2))))
+
+    ;; retrieving file posts
+    (multiple-value-bind (body code headers)
+        (dex:get (localhost "posts" "?type=file"))
+      (let* ((json-body (cl-json:decode-json-from-string body)))
+        (is (eql (length json-body)
+                 1))
+        (is (eql (length (nmebious::cassoc :posts
+                                           json-body))
+                 1))))
 
     ;; retrieving too many posts
     (multiple-value-bind (body code headers)
@@ -214,10 +220,19 @@
                    code))
           (is (string= message "Board does not exist.")))))
 
+    ;; incorrect type
+    (multiple-value-bind (body code headers)
+        (dex:get (localhost "posts" "?type=incorrect"))
+      (let* ((json-body (cl-json:decode-json-from-string body))
+             (message (nmebious::cassoc :message json-body)))
+        (is (eql 400
+                 code))
+        (is (string= message "Incorrect type."))))
+
     ;; submit 1 to each board, check if length 2 with no board specified, check if 1 each
     ;; and their boards are correct in json
     (when (> (length nmebious::*boards*) 0)
-      (postmodern:query (:delete-from 'text-post))
+      (postmodern:query (:delete-from 'post))
       (let* ((first-board (first nmebious::*boards*))
              (second-board (second nmebious::*boards*)))
 
@@ -240,7 +255,7 @@
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
-            (is (eql (length (nmebious::cassoc :txt
+            (is (eql (length (nmebious::cassoc :posts
                                                json-body))
                      2))))
 
@@ -250,7 +265,7 @@
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
-            (is (eql (length (nmebious::cassoc :txt
+            (is (eql (length (nmebious::cassoc :posts
                                                json-body))
                      2))))
 
@@ -260,7 +275,7 @@
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
-            (is (eql (length (nmebious::cassoc :txt
+            (is (eql (length (nmebious::cassoc :posts
                                                json-body))
                      4))))
 
@@ -270,7 +285,7 @@
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
-            (is (eql (length (nmebious::cassoc :txt
+            (is (eql (length (nmebious::cassoc :posts
                                                json-body))
                      3))))
 
@@ -280,7 +295,7 @@
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
-            (is (eql (length (nmebious::cassoc :txt
+            (is (eql (length (nmebious::cassoc :posts
                                                json-body))
                      1))))))))
 
