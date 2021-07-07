@@ -1,25 +1,24 @@
 (in-package #:nmebious)
 
 ;; POST text
-(defroute submit-text ("/submit/txt" :method :post) ()
+(defroute submit-text ("/submit/text" :method :post) ()
   (with-fail-handler (submit-text)
     (setf (hunchentoot:header-out "Access-Control-Allow-Origin") "*")
     (let* ((json (decode-json-from-string (raw-post-data :force-text t)))
            (ip-hash (hash-ip  (real-remote-addr)))
            (board (or (cassoc :board json)
                       (throw-request-error "No board data found.")))
-           (submitted-text (or (cassoc :txt json)
+           (submitted-text (or (cassoc :text json)
                                (throw-request-error "No text data found in body.")))
            (formatted-text (format nil "~A" submitted-text))
            (checksum (hex (md5sum-string formatted-text))))
-      (format t "sdsds~Adsds" formatted-text)
       (with-allowed-check (:board board
                            :ip-hash ip-hash
                            :text-data formatted-text
                            :checksum checksum)
         (let* ((post-id (caar (insert-post formatted-text
                                            checksum
-                                           "txt"
+                                           "text"
                                            board
                                            ip-hash))))
           (broadcast :type 'text
@@ -74,7 +73,8 @@
            (ip-hash (hash-ip (real-remote-addr))))
       (with-allowed-check (:ip-hash ip-hash
                            :post-get-count count
-                           :type type)
+                           :type type
+                           :board board)
         (encode-json-alist-to-string (pairlis '(posts)
                                               (list (select-posts count
                                                                   offset

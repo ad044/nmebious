@@ -53,9 +53,9 @@
 
 (defmacro with-submit-text ((text board) &body body)
   `(multiple-value-bind (body code headers uri)
-       (dexador:post  (localhost "submit" "txt")
+       (dexador:post  (localhost "submit" "text")
                       :content (cl-json:encode-json-alist-to-string
-                                (pairlis '(txt board)
+                                (pairlis '(text board)
                                          (list ,text ,board)))
                       :headers '((:content-type . "application/json")))
      (declare (ignore headers uri))
@@ -101,7 +101,7 @@
 
     ;; incorrectly named key for text
     (multiple-value-bind (body code headers uri)
-        (dexador:post  (localhost "submit" "txt")
+        (dexador:post  (localhost "submit" "text")
                        :content (cl-json:encode-json-alist-to-string (pairlis '(test board)
                                                                               (list test-board "test")))
                        :headers '((:content-type . "application/json")))
@@ -110,8 +110,8 @@
 
     ;; incorrectly named key for board
     (multiple-value-bind (body code headers uri)
-        (dexador:post  (localhost "submit" "txt")
-                       :content (cl-json:encode-json-alist-to-string (pairlis '(txt test)
+        (dexador:post  (localhost "submit" "text")
+                       :content (cl-json:encode-json-alist-to-string (pairlis '(text test)
                                                                               (list test-board "test")))
                        :headers '((:content-type . "application/json")))
       (declare (ignore headers uri))
@@ -149,9 +149,9 @@
   (with-fixture test-env ()
     ;; insert test data
     (dotimes (i 3)
-      (dexador:post  (localhost "submit" "txt")
+      (dexador:post  (localhost "submit" "text")
                      :content (cl-json:encode-json-alist-to-string
-                               (pairlis '(txt board)
+                               (pairlis '(text board)
                                         (list i test-board)))
                      :headers '((:content-type . "application/json"))))
     (dex:post (localhost "submit" "file")
@@ -170,7 +170,7 @@
 
     ;; retrieving only text posts
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts" "?type=txt"))
+        (dex:get (localhost "posts" "?type=text"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
                  1))
@@ -180,7 +180,7 @@
 
     ;; retriveing only 2 text posts
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts" "?type=txt&count=2"))
+        (dex:get (localhost "posts" "?type=text&count=2"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
                  1))
@@ -201,7 +201,7 @@
     ;; retrieving too many posts
     (multiple-value-bind (body code headers)
         (dex:get (localhost "posts" (format nil
-                                            "?type=txt&count=~A"
+                                            "?type=text&count=~A"
                                             (write-to-string (+ 1
                                                                 nmebious::*post-get-limit*)))))
       (let* ((json-body (cl-json:decode-json-from-string body))
@@ -238,20 +238,20 @@
 
         ;; insert random data
         (dotimes (i 2)
-          (dexador:post  (localhost "submit" "txt")
+          (dexador:post  (localhost "submit" "text")
                          :content (cl-json:encode-json-alist-to-string
-                                   (pairlis '(txt board)
+                                   (pairlis '(text board)
                                             (list i first-board)))
                          :headers '((:content-type . "application/json")))
-          (dexador:post  (localhost "submit" "txt")
+          (dexador:post  (localhost "submit" "text")
                          :content (cl-json:encode-json-alist-to-string
-                                   (pairlis '(txt board)
+                                   (pairlis '(text board)
                                             (list i second-board)))
                          :headers '((:content-type . "application/json"))))
 
         ;; check if 2 posts on first board
         (multiple-value-bind (body code headers)
-            (dex:get (localhost "posts" (format nil "~A?type=txt" first-board)))
+            (dex:get (localhost "posts" (format nil "~A?type=text" first-board)))
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
@@ -261,7 +261,7 @@
 
         ;; check if 2 posts on second board
         (multiple-value-bind (body code headers)
-            (dex:get (localhost "posts" (format nil "~A?type=txt" second-board)))
+            (dex:get (localhost "posts" (format nil "~A?type=text" second-board)))
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
@@ -271,7 +271,7 @@
 
         ;; both together should be 4
         (multiple-value-bind (body code headers)
-            (dex:get (localhost "posts" "?type=txt"))
+            (dex:get (localhost "posts" "?type=text"))
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
@@ -281,7 +281,7 @@
 
         ;; offset works
         (multiple-value-bind (body code headers)
-            (dex:get (localhost "posts" "?type=txt&offset=1"))
+            (dex:get (localhost "posts" "?type=text&offset=1"))
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
@@ -291,7 +291,7 @@
 
         ;; count works
         (multiple-value-bind (body code headers)
-            (dex:get (localhost "posts" "?type=txt&count=1"))
+            (dex:get (localhost "posts" "?type=text&count=1"))
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))

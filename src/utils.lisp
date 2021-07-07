@@ -21,9 +21,6 @@
   (> (cassoc :id a)
      (cassoc :id b)))
 
-(defun construct-where-clause (type board)
-  )
-
 (defparameter *success* (encode-json-alist-to-string (pairlis '(status) '("Success"))))
 
 ;; crypto
@@ -86,7 +83,7 @@
                (not (board-exists-p ,board)))
           (throw-request-error "Board does not exist."))
          ((and ,type
-               (not (or (string= type "txt")
+               (not (or (string= type "text")
                         (string= type "file"))))
           (throw-request-error "Incorrect type."))
          (t (progn
