@@ -24,20 +24,13 @@ Of course, before that we need to do some additional configuration:
 - PostgreSQL must be set up with 2 databases named `nmebious` and `test` (the second one is optional and only needed if you want to run the test suite).
 - Create a `.env` file with the following format:
 	```
-<<<<<<< Updated upstream
-   PGUSER=user
-   PGPASSWORD=password
-   SECRET=secret
-   	```
-  Where `PGUSER` and `PGPASSWORD` are the credentials for the Postgres database, and `SECRET` is the key used by HMAC to hash the IP addresses.
-=======
    POSTGRES_HOST="localhost" or "db" when using docker
    POSTGRES_USER=postgres user
    POSTGRES_PASSWORD=postgres password
    SECRET=secret
+   MAX_FILE_SIZE=2
    	```
-  Where `POSTGRES_USER` and `POSTGRESS_PASSWORD` are the credentials for the Postgres database, and `SECRET` is the key used by HMAC to hash the IP addresses.
->>>>>>> Stashed changes
+Where `PGUSER` and `PGPASSWORD` are the credentials for the Postgres database, `SECRET` is the key used by HMAC to hash the IP addresses, and `MAX_FILE_SIZE` is the maximum allowed file size in megabytes.
 
 - [ImageMagick](https://imagemagick.org/) needs to be installed.
 
