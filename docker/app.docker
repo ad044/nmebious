@@ -1,0 +1,11 @@
+FROM fukamachi/sbcl
+EXPOSE 4242 4005
+
+WORKDIR /nmebious
+COPY . .
+
+
+ENTRYPOINT ["/bin/bash", "/nmebious/docker/entrypoint.sh"]
+#CMD "/nmebious/docker/entrypoint.sh"
+#CMD build
+#ENTRYPOINT ["sbcl", "--load /nmebious/docker/entrypoint.lisp"]
