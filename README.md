@@ -30,7 +30,7 @@ Of course, before that we need to do some additional configuration:
    SECRET=secret
    MAX_FILE_SIZE=2
    	```
-Where `PGUSER` and `PGPASSWORD` are the credentials for the Postgres database, `SECRET` is the key used by HMAC to hash the IP addresses, and `MAX_FILE_SIZE` is the maximum allowed file size in megabytes.
+  Where `PGUSER` and `PGPASSWORD` are the credentials for the Postgres database, `SECRET` is the key used by HMAC to hash the IP addresses, and `MAX_FILE_SIZE` is the maximum allowed file size in megabytes.
 
 - [ImageMagick](https://imagemagick.org/) needs to be installed.
 
