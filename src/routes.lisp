@@ -110,3 +110,9 @@
   (with-fail-handler (config)
     (encode-json-alist-to-string (pairlis '(boards backgrounds accepted-mime-types post-get-limit max-file-size)
                                           (list  *boards* *backgrounds* *accepted-mime-types* *post-get-limit* *max-file-size*)))))
+
+;; Intial board data
+(defroute initial-board-data ("/initial/:board" :method :get) ()
+  (with-fail-handler (initial-board-data)
+    (encode-json-alist-to-string (pairlis '(boards backgrounds accepted-mime-types post-get-limit max-file-size)
+                                          (list  *boards* *backgrounds* *accepted-mime-types* *post-get-limit* *max-file-size*)))))

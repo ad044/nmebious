@@ -33,15 +33,24 @@
                                 ,offset))
          :alists))
 
+(defun get-initial-board-data (post-count board)
+  (query (:limit  (:select 'id 'type 'data 'submission-date 'board
+                    (:as  (:over (:count '*))
+                          'full_count)
+                    :from 'post
+                    :where (:= 'board board))
+                  post-count)
+         :alists))
+
 (defun post-duplicate-p (checksum ip-hash limit board)
-  (> (length (query (:limit (:order-by (:select '*
-                                         :from 'post
-                                         :where (:and  (:= 'checksum checksum)
-                                                       (:= 'ip-hash ip-hash)
-                                                       (:= 'board board)))
-                                       (:desc 'id))
-                            limit)))
-     0))
+  (query  (:select  (:exists  (:limit (:order-by (:select 1
+                                                   :from 'post
+                                                   :where (:and  (:= 'checksum checksum)
+                                                                 (:= 'ip-hash ip-hash)
+                                                                 (:= 'board board)))
+                                                 (:desc 'id))
+                                      limit)))
+          :single))
 
 (defun delete-all-from-user (ip-hash)
   (query (:delete-from 'post
