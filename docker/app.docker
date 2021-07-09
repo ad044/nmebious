@@ -1,0 +1,8 @@
+FROM fukamachi/sbcl
+EXPOSE 4242 4005
+
+WORKDIR /nmebious
+COPY . .
+
+
+ENTRYPOINT ["/bin/bash", "/nmebious/docker/entrypoint.sh"]

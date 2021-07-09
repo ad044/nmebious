@@ -11,11 +11,12 @@ nmebious (pronounced N-mebious) is an anonymous imageboard, a clone of [mebious]
 
 ## Setting up
 
-There are three main ways of setting up an instance:
+There are four main ways of setting up an instance:
 
 1. Running `make`, which will build the binary and executing it.
 2. Running `make run`, which will load the system and put you directly into the CL REPL. This will also create a SWANK server on port 4005 so you can connect and hack on it live.
 3. Manually loading the system using `asdf:load-system` and running `(nmebious:start-server)`
+4. Building and running via Docker using `docker-compose up`.
 
 Of course, before that we need to do some additional configuration:
 
@@ -23,8 +24,9 @@ Of course, before that we need to do some additional configuration:
 - PostgreSQL must be set up with 2 databases named `nmebious` and `test` (the second one is optional and only needed if you want to run the test suite).
 - Create a `.env` file with the following format:
 	```
-   PGUSER=user
-   PGPASSWORD=password
+   POSTGRES_HOST="localhost" or "db" when using docker
+   POSTGRES_USER=postgres user
+   POSTGRES_PASSWORD=postgres password
    SECRET=secret
    MAX_FILE_SIZE=2
    	```
