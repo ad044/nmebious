@@ -6,6 +6,3 @@ COPY . .
 
 
 ENTRYPOINT ["/bin/bash", "/nmebious/docker/entrypoint.sh"]
-#CMD "/nmebious/docker/entrypoint.sh"
-#CMD build
-#ENTRYPOINT ["sbcl", "--load /nmebious/docker/entrypoint.lisp"]
