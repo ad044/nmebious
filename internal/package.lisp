@@ -60,7 +60,8 @@
   (:shadowing-import-from #:easy-routes
                           #:defroute)
   (:export #:start-server
-           #:stop-server))
+           #:stop-server
+           #:*port*))
 
 
 (in-package :cl-json)

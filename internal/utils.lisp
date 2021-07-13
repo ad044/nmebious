@@ -13,10 +13,6 @@
 (defun numeric-string-p (string)
   (ignore-errors (parse-integer string)))
 
-(defun format-image-link (filename)
-  (when filename
-    (format nil "~Astatic/~A" *web-url* filename)))
-
 (defun sort-posts-by-id (a b)
   (> (cassoc :id a)
      (cassoc :id b)))

@@ -3,9 +3,6 @@
 ;; Which port to run hunchentoot on
 (defparameter *port* 8080)
 
-;; URL for the website (the "/" at the end is important)
-(defparameter *web-url* "https://example.website/")
-
 ;; Accepted mime types for file submissions
 (defparameter *accepted-mime-types* (list "image/png"
                                           "image/jpeg"

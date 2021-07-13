@@ -81,29 +81,15 @@
                                                                   type
                                                                   board))))))))
 
-;; RSS feed
-(defroute rss-feed ("/rss" :method :get)
+;; JSON data for RSS feed
+(defroute get-rss-data ("/rss-data" :method :get)
     ((page :init-form 0 :parameter-type 'integer))
-  (setf (content-type*) "application/rss+xml")
-  (with-fail-handler (rss-feed)
+  (with-fail-handler (get-rss-data)
     (let* ((posts (select-posts 30 (* page 30)))
            (sorted-posts (sort posts
                                #'sort-posts-by-id)))
-      (with-output-to-string (s)
-        (with-rss2 (s :encoding "utf-8")
-          (rss-channel-header "nmebious" *web-url*
-                              :description "monitoring the wired")
-          (dolist (item sorted-posts)
-            (let* ((text-data (cassoc :text-data item))
-                   (file-data (cassoc :filename item))
-                   (id (cassoc :id item))
-                   (board (cassoc :board item)))
-              (rss-item nil
-                        :guid id
-                        :category board
-                        :link (format-image-link file-data)
-                        :description text-data
-                        :pubDate (format-timestring nil (cassoc :submission-date item))))))))))
+      (encode-json-alist-to-string (pairlis '(posts)
+                                            (list sorted-posts))))))
 
 ;; Server configuration
 (defroute config ("/config" :method :get) ()
@@ -111,8 +97,3 @@
     (encode-json-alist-to-string (pairlis '(boards backgrounds accepted-mime-types post-get-limit max-file-size)
                                           (list  *boards* *backgrounds* *accepted-mime-types* *post-get-limit* *max-file-size*)))))
 
-;; Intial board data
-(defroute initial-board-data ("/initial/:board" :method :get) ()
-  (with-fail-handler (initial-board-data)
-    (encode-json-alist-to-string (pairlis '(boards backgrounds accepted-mime-types post-get-limit max-file-size)
-                                          (list  *boards* *backgrounds* *accepted-mime-types* *post-get-limit* *max-file-size*)))))

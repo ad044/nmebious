@@ -33,15 +33,6 @@
                                 ,offset))
          :alists))
 
-(defun get-initial-board-data (post-count board)
-  (query (:limit  (:select 'id 'type 'data 'submission-date 'board
-                    (:as  (:over (:count '*))
-                          'full_count)
-                    :from 'post
-                    :where (:= 'board board))
-                  post-count)
-         :alists))
-
 (defun post-duplicate-p (checksum ip-hash limit board)
   (query  (:select  (:exists  (:limit (:order-by (:select 1
                                                    :from 'post

@@ -7,9 +7,6 @@
 (defvar *socket-server* (make-instance 'hunchensocket:websocket-acceptor :port 12345))
 
 (defun start-db ()
-  (push (hunchentoot:create-folder-dispatcher-and-handler
-         "/static/" *static-dir*)
-        hunchentoot:*dispatch-table*)
   (set-local-time-cl-postgres-readers)
   (connect-toplevel "nmebious"
                     nmebious::*db-user*
@@ -18,6 +15,9 @@
   (setup-db))
 
 (defun start-hunchentoot ()
+  (push (hunchentoot:create-folder-dispatcher-and-handler
+         "/static/" *static-dir*)
+        hunchentoot:*dispatch-table*)
   (setf *default-content-type* "application/json")
   (start *server*)
   (start *socket-server*)

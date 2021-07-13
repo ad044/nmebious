@@ -21,8 +21,10 @@
                #:cl-dotenv
                #:swank
                #:xml-emitter
-               #:hunchensocket)
-  :components ((:module "src"
+               #:hunchensocket
+               #:easy-routes+djula
+               #:dexador)
+  :components ((:module "internal"
                 :components
                 ((:file "package")
                  (:file "config")
@@ -30,5 +32,12 @@
                  (:file "utils")
                  (:file "nmebious")
                  (:file "routes")
-                 (:file "sockets"))))
+                 (:file "sockets")))
+               (:module "frontend"
+                :components
+                ((:file "package")
+                 (:file "config")
+                 (:file "utils")
+                 (:file "routes")
+                 (:file "server"))))
   :in-order-to ((test-op (test-op "nmebious-test"))))
