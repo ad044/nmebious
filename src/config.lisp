@@ -3,6 +3,9 @@
 ;; Which port to run hunchentoot on
 (defparameter *port* 8080)
 
+;; Whether or not to enable socket server for front-ends that support live updates
+(defparameter *socket-server-enabled-p* t)
+
 ;; Accepted mime types for file submissions
 (defparameter *accepted-mime-types* (list "image/png"
                                           "image/jpeg"
@@ -15,7 +18,10 @@
 (defparameter *static-dir* (asdf:system-relative-pathname 'nmebious "static/"))
 
 ;; Where to store user uploaded content
-(defparameter *uploads-dir* (asdf:system-relative-pathname 'nmebious "static/uploads/"))
+(defparameter *uploads-dir* (asdf:system-relative-pathname 'nmebious "uploads/"))
+
+;; Path on site to uploaded content
+(defparameter *uploads-web-path* "/uploads/")
 
 ;; Background for each board (simply put filenames in the same order as *boards*)
 ;; If you don't want a specific board to have a background, just put NIL at that point
@@ -45,3 +51,15 @@
 
 ;; Maximum file size (in mbs)
 (defparameter *max-file-size* (parse-integer (gethash "MAX_FILE_SIZE" *env*)))
+
+
+;; ==================       Configuration for the default frontend (if enabled)        ======================
+
+;; How many file entries to display on page
+(defparameter *file-display-count* 10)
+
+;; How many text entries to display on page
+(defparameter *text-display-count* 20)
+
+;; URL for the front-end website (the "/" at the end is important)
+(defparameter *web-url* "https://example.website/")

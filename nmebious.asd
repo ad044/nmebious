@@ -24,20 +24,14 @@
                #:hunchensocket
                #:easy-routes+djula
                #:dexador)
-  :components ((:module "internal"
+  :components ((:module "src"
                 :components
                 ((:file "package")
                  (:file "config")
                  (:file "db")
                  (:file "utils")
                  (:file "nmebious")
+                 (:file "views")
                  (:file "routes")
-                 (:file "sockets")))
-               (:module "frontend"
-                :components
-                ((:file "package")
-                 (:file "config")
-                 (:file "utils")
-                 (:file "routes")
-                 (:file "server"))))
+                 (:file "sockets"))))
   :in-order-to ((test-op (test-op "nmebious-test"))))

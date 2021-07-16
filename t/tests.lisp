@@ -53,18 +53,16 @@
 
 (defmacro with-submit-text ((text board) &body body)
   `(multiple-value-bind (body code headers uri)
-       (dexador:post  (localhost "submit" "text")
-                      :content (cl-json:encode-json-alist-to-string
-                                (pairlis '(text board)
-                                         (list ,text ,board)))
-                      :headers '((:content-type . "application/json")))
+       (dexador:post  (localhost "api" "submit" "text")
+                      :content (format nil "board=~A&text=~A" ,board ,text)
+                      :headers '((:content-type . "application/x-www-form-urlencoded")))
      (declare (ignore headers uri))
      ,@body))
 
 (defmacro with-submit-file ((path board) &body body)
   `(multiple-value-bind (body code headers uri)
-       (dex:post (localhost "submit" "file")
-                 :content (pairlis '(file board)
+       (dex:post (localhost "api" "submit" "file")
+                 :content (pairlis '("file" "board")
                                    (list (test-file ,path) ,board)))
      (declare (ignore headers uri))
      ,@body))
@@ -101,19 +99,17 @@
 
     ;; incorrectly named key for text
     (multiple-value-bind (body code headers uri)
-        (dexador:post  (localhost "submit" "text")
-                       :content (cl-json:encode-json-alist-to-string (pairlis '(test board)
-                                                                              (list test-board "test")))
-                       :headers '((:content-type . "application/json")))
+        (dexador:post  (localhost "api" "submit" "text")
+                       :content (format nil "board=~A&incorrect=~A" test-board "test")
+                       :headers '((:content-type . "application/x-www-form-urlencoded")))
       (declare (ignore headers uri))
       (expect-error-with-message "No text data found in body."))
 
     ;; incorrectly named key for board
     (multiple-value-bind (body code headers uri)
-        (dexador:post  (localhost "submit" "text")
-                       :content (cl-json:encode-json-alist-to-string (pairlis '(text test)
-                                                                              (list test-board "test")))
-                       :headers '((:content-type . "application/json")))
+        (dexador:post  (localhost "api" "submit" "text")
+                       :content (format nil "incorrect=~A&text=~A" test-board "test")
+                       :headers '((:content-type . "application/x-www-form-urlencoded")))
       (declare (ignore headers uri))
       (expect-error-with-message "No board data found."))))
 
@@ -139,8 +135,8 @@
 
     ;; incorrectly named key
     (multiple-value-bind (body code headers uri)
-        (dex:post (localhost "submit" "file")
-                  :content (pairlis '(test board)
+        (dex:post (localhost "api" "submit" "file")
+                  :content (pairlis '("test" "board")
                                     (list (test-file "test.jpg") test-board)))
       (declare (ignore headers uri))
       (expect-error-with-message "No file data found."))))
@@ -149,18 +145,16 @@
   (with-fixture test-env ()
     ;; insert test data
     (dotimes (i 3)
-      (dexador:post  (localhost "submit" "text")
-                     :content (cl-json:encode-json-alist-to-string
-                               (pairlis '(text board)
-                                        (list i test-board)))
-                     :headers '((:content-type . "application/json"))))
-    (dex:post (localhost "submit" "file")
-              :content (pairlis '(file board)
+      (dexador:post  (localhost "api" "submit" "text")
+                     :content (format nil "board=~A&text=~A" test-board i)
+                     :headers '((:content-type . "application/x-www-form-urlencoded"))))
+    (dex:post (localhost "api" "submit" "file")
+              :content (pairlis '("file" "board")
                                 (list (test-file "test.jpg") test-board)))
 
     ;; retrieving all types of posts
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts/"))
+        (dex:get (localhost "api" "posts/"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
                  1))
@@ -170,7 +164,7 @@
 
     ;; retrieving only text posts
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts" "?type=text"))
+        (dex:get (localhost "api" "posts" "?type=text"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
                  1))
@@ -180,7 +174,7 @@
 
     ;; retriveing only 2 text posts
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts" "?type=text&count=2"))
+        (dex:get (localhost "api" "posts" "?type=text&count=2"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
                  1))
@@ -190,7 +184,7 @@
 
     ;; retrieving file posts
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts" "?type=file"))
+        (dex:get (localhost "api" "posts" "?type=file"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
                  1))
@@ -200,7 +194,7 @@
 
     ;; retrieving too many posts
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts" (format nil
+        (dex:get (localhost "api" "posts" (format nil
                                             "?type=text&count=~A"
                                             (write-to-string (+ 1
                                                                 nmebious::*post-get-limit*)))))
@@ -213,7 +207,7 @@
     ;; incorrect board
     (when (not (nmebious::board-exists-p "thisboarddoesnotexist"))
       (multiple-value-bind (body code headers)
-          (dex:get (localhost "posts" "thisboarddoesnotexist"))
+          (dex:get (localhost "api" "posts" "thisboarddoesnotexist"))
         (let* ((json-body (cl-json:decode-json-from-string body))
                (message (nmebious::cassoc :message json-body)))
           (is (eql 400
@@ -222,7 +216,7 @@
 
     ;; incorrect type
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "posts" "?type=incorrect"))
+        (dex:get (localhost "api" "posts" "?type=incorrect"))
       (let* ((json-body (cl-json:decode-json-from-string body))
              (message (nmebious::cassoc :message json-body)))
         (is (eql 400
@@ -238,20 +232,16 @@
 
         ;; insert random data
         (dotimes (i 2)
-          (dexador:post  (localhost "submit" "text")
-                         :content (cl-json:encode-json-alist-to-string
-                                   (pairlis '(text board)
-                                            (list i first-board)))
-                         :headers '((:content-type . "application/json")))
-          (dexador:post  (localhost "submit" "text")
-                         :content (cl-json:encode-json-alist-to-string
-                                   (pairlis '(text board)
-                                            (list i second-board)))
-                         :headers '((:content-type . "application/json"))))
+          (dexador:post  (localhost "api" "submit" "text")
+                         :content (format nil "board=~A&text=~A" first-board i)
+                         :headers '((:content-type . "application/x-www-form-urlencoded")))
+          (dexador:post  (localhost "api" "submit" "text")
+                         :content (format nil "board=~A&text=~A" second-board i)
+                         :headers '((:content-type . "application/x-www-form-urlencoded"))))
 
         ;; check if 2 posts on first board
         (multiple-value-bind (body code headers)
-            (dex:get (localhost "posts" (format nil "~A?type=text" first-board)))
+            (dex:get (localhost "api" "posts" (format nil "~A?type=text" first-board)))
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
@@ -261,7 +251,7 @@
 
         ;; check if 2 posts on second board
         (multiple-value-bind (body code headers)
-            (dex:get (localhost "posts" (format nil "~A?type=text" second-board)))
+            (dex:get (localhost "api" "posts" (format nil "~A?type=text" second-board)))
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
@@ -271,7 +261,7 @@
 
         ;; both together should be 4
         (multiple-value-bind (body code headers)
-            (dex:get (localhost "posts" "?type=text"))
+            (dex:get (localhost "api" "posts" "?type=text"))
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
@@ -281,7 +271,7 @@
 
         ;; offset works
         (multiple-value-bind (body code headers)
-            (dex:get (localhost "posts" "?type=text&offset=1"))
+            (dex:get (localhost "api" "posts" "?type=text&offset=1"))
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
@@ -291,7 +281,7 @@
 
         ;; count works
         (multiple-value-bind (body code headers)
-            (dex:get (localhost "posts" "?type=text&count=1"))
+            (dex:get (localhost "api" "posts" "?type=text&count=1"))
           (let* ((json-body (cl-json:decode-json-from-string body)))
             (is (eql (length json-body)
                      1))
@@ -304,7 +294,7 @@
   (with-fixture test-env ()
     ;; check if get server parameters works
     (multiple-value-bind (body code headers)
-        (dex:get (localhost "config"))
+        (dex:get (localhost "api" "config"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is  (equalp (nmebious::cassoc :boards  json-body)
                      nmebious::*boards*))

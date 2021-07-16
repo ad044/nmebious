@@ -56,9 +56,16 @@
                           #:*default-content-type*
                           #:content-type*
                           #:header-out
-                          #:script-name)
+                          #:script-name
+                          #:redirect
+                          #:*session*
+                          #:session-value)
   (:shadowing-import-from #:easy-routes
                           #:defroute)
+  (:shadowing-import-from #:djula
+                          #:add-template-directory
+                          #:compile-template*
+                          #:render-template*)
   (:export #:start-server
            #:stop-server
            #:*port*))

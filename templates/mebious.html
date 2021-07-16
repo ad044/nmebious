@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>entry wired</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" type="text/css" href="/static/css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="/static/css/mebious.css" />
+   </script>
+  </head>
+    <body>
+      {% if error %}
+        <span class="flash">{{ error }}</span>
+      {% else %}
+      {% endif %}
+      <div id="outline">
+         <form action="/web-view/submit/text" method="POST" id="text">
+           <input name="text" size="32" maxlength="512" id="txt_in">
+           <button>in_txt</button>
+         </form>
+         <form action="/web-view/submit/file" method="POST" id="file" enctype="multipart/form-data">
+           <input name="file" type="file">
+           <button>in_img</button>
+         </form>
+         <a href="/rss">rss</a>
+      </div>
+      <div id="posts">
+         {% for text in text-posts %}
+         <p class="post" style="{{ text.style }}">{{ text.data }}</p>
+         {% endfor %}
+      </div>
+      {% for file in file-posts %}
+      <img class="image" src="{{ uploads-web-path }}{{ file.data }}" onerror="this.style.display='none'" style="{{ file.style }}"></img>
+      {% endfor %}
+
+
+      <div class="boardlist">
+        {% for board in boards %}
+            <a href="/boards/{{ board }}" {% ifequal active-board board %} style="color: #ffffff; border-color: #ffffff" {% endifequal %}>{{ board }}</a>
+        {% endfor %}
+      </div>
+  </body>
+</html>

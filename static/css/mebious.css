@@ -1,0 +1,113 @@
+/* Taken from https://github.com/dataphreak1001/mebious */
+
+/* Based on the original mebious.co.uk style. */
+
+* {
+    margin: 0px;
+    padding: 0px;
+}
+
+body {
+    background: #000000;
+}
+
+body, input {
+    background: #000000;
+    color: #00FF00;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 0.7rem;
+}
+
+#text {
+    display: inline;
+}
+
+#file {
+    display: inline;
+}
+
+#outline {
+    vertical-align: middle;
+    border: 1px solid #003300;
+    display: inline;
+    float: left;
+    padding: 2px;
+    clear: none;
+    margin: 2px;
+}
+
+#outline input {
+    border: 1px solid #006600;
+    padding: 2px;
+    vertical-align: middle;
+}
+
+#outline button, #outline a {
+    vertical-align: middle;
+    text-decoration: none;
+    border: 1px solid #00cc00;
+    color: #00ff00;
+    background: #000000;
+    font-size: 0.7rem;
+    padding: 2px;
+}
+
+#outline a:hover, button {
+    cursor: default;
+}
+
+#posts {
+    clear: both;
+}
+
+.post {
+    width: 40%;
+    word-wrap: break-word;
+    position: relative;
+}
+
+.image {
+    position: absolute;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -moz-user-drag: none;
+}
+
+.flash {
+    color: #ff0000;
+    border: 1px solid #ff0000;
+    padding: 5px;
+    display: block;
+    text-align: center;
+    margin: 5px;
+    font-size: 1vw;
+}
+
+.boardlist {
+  position: fixed;
+  left: 50%;
+  bottom: 10px;
+  transform: translate(-50%, -50%);
+  margin: 0 auto;
+  z-index: 100;
+}
+
+.boardlist a {
+  background: #000000;
+  font-size: 2rem;
+  border: 1px solid #006600;
+  padding: 10px;
+  color: #00ff00;
+  text-decoration: none;
+}
+
+.boardlist a:hover {
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.boardlist > * {
+  margin: 0 15px;
+}

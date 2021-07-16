@@ -9,8 +9,8 @@
 (defun start-db ()
   (set-local-time-cl-postgres-readers)
   (connect-toplevel "nmebious"
-                    nmebious::*db-user*
-                    nmebious::*db-pass*
+                    *db-user*
+                    *db-pass*
                     "localhost")
   (setup-db))
 
@@ -18,14 +18,19 @@
   (push (hunchentoot:create-folder-dispatcher-and-handler
          "/static/" *static-dir*)
         hunchentoot:*dispatch-table*)
+  (push (hunchentoot:create-folder-dispatcher-and-handler
+         *uploads-web-path* *uploads-dir*)
+        hunchentoot:*dispatch-table*)
   (setf *default-content-type* "application/json")
   (start *server*)
-  (start *socket-server*)
+  (when *socket-server-enabled-p*
+    (start *socket-server*))
   (schedule-ping-timer))
 
 (defun stop-hunchentoot ()
   (stop *server*)
-  (stop *socket-server*)
+  (when *socket-server-enabled-p*
+    (stop *socket-server*))
   (unschedule-ping-timer))
 
 (defun start-server ()
