@@ -59,7 +59,10 @@
                           #:script-name
                           #:redirect
                           #:*session*
-                          #:session-value)
+                          #:session-value
+                          #:start-session
+                          #:create-folder-dispatcher-and-handler
+                          #:*dispatch-table*)
   (:shadowing-import-from #:easy-routes
                           #:defroute)
   (:shadowing-import-from #:djula

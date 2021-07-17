@@ -32,6 +32,7 @@
                  (:file "utils")
                  (:file "nmebious")
                  (:file "views")
+                 (:file "decorators")
                  (:file "routes")
                  (:file "sockets"))))
   :in-order-to ((test-op (test-op "nmebious-test"))))

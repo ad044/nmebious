@@ -15,14 +15,14 @@
       {% endif %}
       <div id="outline">
          <form action="/web-view/submit/text" method="POST" id="text">
-           <input name="text" size="32" maxlength="512" id="txt_in">
-           <button>in_txt</button>
+           <input name="text" size="32" maxlength="512" id="txt_in" {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}>
+           <button {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}>in_txt</button>
          </form>
          <form action="/web-view/submit/file" method="POST" id="file" enctype="multipart/form-data">
-           <input name="file" type="file">
-           <button>in_img</button>
+           <input name="file" type="file" {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}>
+           <button {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}>in_img</button>
          </form>
-         <a href="/rss">rss</a>
+         <a href="/rss/{{ active-board }}" {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}>rss</a>
       </div>
       <div id="posts">
          {% for text in text-posts %}

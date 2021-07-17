@@ -23,7 +23,7 @@
                       ,checksum))
            :returning 'id)))
 
-(defun select-posts (count offset &optional type board)
+(defun select-posts (count offset &key type board)
   (query (sql-compile  `(:limit (:order-by (:select 'id 'type 'data 'submission-date 'board
                                              :from 'post
                                              :where (:and ,(if type `(:= 'type ,type) t)

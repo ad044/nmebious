@@ -14,13 +14,10 @@
                     "localhost")
   (setup-db))
 
+(define-static-resource "/static/" *static-dir*)
+(define-static-resource *uploads-web-path* *uploads-dir*)
+
 (defun start-hunchentoot ()
-  (push (hunchentoot:create-folder-dispatcher-and-handler
-         "/static/" *static-dir*)
-        hunchentoot:*dispatch-table*)
-  (push (hunchentoot:create-folder-dispatcher-and-handler
-         *uploads-web-path* *uploads-dir*)
-        hunchentoot:*dispatch-table*)
   (setf *default-content-type* "application/json")
   (start *server*)
   (when *socket-server-enabled-p*
