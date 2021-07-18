@@ -16,6 +16,7 @@
 
 (define-static-resource "/static/" *static-dir*)
 (define-static-resource *uploads-web-path* *uploads-dir*)
+(define-static-resource-file "/favicon.ico" (merge-pathnames *static-dir* "favicon.ico"))
 
 (defun start-hunchentoot ()
   (setf *default-content-type* "application/json")

@@ -111,3 +111,15 @@ body, input {
 .boardlist > * {
   margin: 0 15px;
 }
+
+.github-logo {
+  position: absolute;
+  right: 0;
+}
+
+.github-logo img {
+  width: 50%;
+  margin: 0 auto;
+  display: block;
+  margin-top: 5px;
+}

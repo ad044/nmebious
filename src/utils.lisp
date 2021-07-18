@@ -24,6 +24,11 @@
          uri path)
         *dispatch-table*))
 
+(defun define-static-resource-file (uri path)
+  (push (create-static-file-dispatcher-and-handler
+         uri path)
+        *dispatch-table*))
+
 ;; Crypto
 (defun hmac-sha256-bytes (secret text)
   (let ((hmac (make-hmac (ascii-string-to-byte-array secret) :sha256)))
@@ -36,13 +41,15 @@
 (defun hash-ip (ip)
   (hmac-sha256 *secret* ip))
 
+(defun single-board-p ()
+  (eql (length *boards*) 1))
+
 ;; Request handling
 
 (defmacro redirect-back-to-board ()
-  `(redirect (format nil "/boards/~A" (session-value :board))))
-
-(defun redirect-to-404 ()
-  (redirect "/not-found"))
+  `(if ,(single-board-p)
+       (redirect "/")
+       (redirect (format nil "/boards/~A" (session-value :board)))))
 
 (define-condition request-error (error)
   ((message :initarg :message :reader message)))
@@ -254,7 +261,7 @@
   (acons :data (corrupt (cassoc :data post)) (acons :style (text-style) post)))
 
 (defun file-style ()
-  (let* ((z-index (random-in-range 1 10))
+  (let* ((z-index (- (random-in-range 1 10)))
          (left (random-in-range 0.1 50.0))
          (opacity (random-in-range 0.5 1.0))
          (top (random-in-range 7.0 50.0)))

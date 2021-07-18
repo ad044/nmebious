@@ -22,8 +22,9 @@
            <input name="file" type="file" {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}>
            <button {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}>in_img</button>
          </form>
-         <a href="/rss/{{ active-board }}" {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}>rss</a>
+         <a href="/rss/{% if boards %}{{ active-board }}{% endif %}" {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}>rss</a>
       </div>
+      <a class="github-logo" href="https://github.com/ad044/nmebious"><img src="/static/img/github.png"></a>
       <div id="posts">
          {% for text in text-posts %}
          <p class="post" style="{{ text.style }}">{{ text.data }}</p>

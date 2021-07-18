@@ -43,24 +43,27 @@
     ((page :init-form 0 :parameter-type 'integer))
   (with-fail-handler (rss-feed :type 'web-view)
     (let* ((board (parse-board board)))
-      (after-get-request-validity-check (:board board)
-        (let* ((posts (select-posts 30 (* page 30) :board board))
-               (sorted-posts (sort posts
-                                   #'sort-posts-by-id)))
-          (with-output-to-string (s)
-            (with-rss2 (s :encoding "utf-8")
-              (rss-channel-header "nmebious" *web-url*
-                                  :description "monitoring the wired")
-              (dolist (item sorted-posts)
-                (let* ((data (cassoc :data item))
-                       (id (cassoc :id item))
-                       (board (cassoc :board item))
-                       (date (cassoc :submission-date item)))
-                  (rss-item nil
-                            :guid id
-                            :category board
-                            :description data
-                            :pubDate date))))))))))
+      (if (and board
+               (single-board-p))
+          (render-404)
+          (after-get-request-validity-check (:board board)
+            (let* ((posts (select-posts 30 (* page 30) :board board))
+                   (sorted-posts (sort posts
+                                       #'sort-posts-by-id)))
+              (with-output-to-string (s)
+                (with-rss2 (s :encoding "utf-8")
+                  (rss-channel-header "nmebious" *web-url*
+                                      :description "monitoring the wired")
+                  (dolist (item sorted-posts)
+                    (let* ((data (cassoc :data item))
+                           (id (cassoc :id item))
+                           (board (cassoc :board item))
+                           (date (cassoc :submission-date item)))
+                      (rss-item nil
+                                :guid id
+                                :category (unless (single-board-p) board)
+                                :description data
+                                :pubDate date)))))))))))
 
 ;; POST file via the default frontend
 (defroute web-submit-file ("/web-view/submit/file" :method :post
@@ -80,9 +83,24 @@
 (defroute web-board ("/boards/:board" :method :get
                                       :decorators (@html)) ()
   (with-fail-handler (web-board :type 'web-view)
-    (start-session)
-    (let* ((flash-message (session-value :flash-message)))
-      (setf (session-value :flash-message) nil)
-      (after-get-request-validity-check (:board board)
-        (setf (session-value :board) board)
-        (render-board board :error flash-message)))))
+    (if (single-board-p)
+        (render-404)
+        (progn
+          (start-session)
+          (let* ((flash-message (session-value :flash-message)))
+            (setf (session-value :flash-message) nil)
+            (after-get-request-validity-check (:board board)
+              (setf (session-value :board) board)
+              (render-board board :error flash-message)))))))
+
+(defroute web-root ("/" :method :get
+                        :decorators (@html)) ()
+  (with-fail-handler (web-root :type 'web-view)
+    (if (single-board-p)
+        (progn
+          (start-session)
+          (let* ((flash-message (session-value :flash-message)))
+            (setf (session-value :flash-message) nil)
+            (setf (session-value :board) (first *boards*))
+            (render-board (first *boards*) :error flash-message)))
+        (redirect (format nil "/boards/~A" (first *boards*))))))

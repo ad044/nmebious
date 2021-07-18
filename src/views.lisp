@@ -10,15 +10,15 @@
          (file-posts (select-posts *file-display-count*  0 :type "file" :board board))
          (stylized-text-posts (map 'list #'stylize-text-post text-posts))
          (stylized-file-posts (map 'list #'stylize-file-post file-posts)))
-    (print board)
     (render-template* +mebious.html+ nil
                       :text-posts stylized-text-posts
                       :file-posts stylized-file-posts
                       :active-board board
-                      :boards *boards*
+                      :boards (unless (single-board-p) *boards*)
                       :error error
                       :uploads-web-path *uploads-web-path*)))
 
 
 (defun render-404 ()
+  (setf (content-type*) "text/html")
   (render-template* +404.html+ nil))

@@ -23,6 +23,9 @@
 ;; Path on site to uploaded content
 (defparameter *uploads-web-path* "/uploads/")
 
+;; URL for the website
+(defparameter *web-url* "https://example.website/")
+
 ;; Background for each board (simply put filenames in the same order as *boards*)
 ;; If you don't want a specific board to have a background, just put NIL at that point
 ;; If you don't want any backgrounds, just set this parameter to NIL
@@ -60,6 +63,3 @@
 
 ;; How many text entries to display on page
 (defparameter *text-display-count* 20)
-
-;; URL for the front-end website (the "/" at the end is important)
-(defparameter *web-url* "https://example.website/")

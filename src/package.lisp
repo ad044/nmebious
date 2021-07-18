@@ -62,6 +62,7 @@
                           #:session-value
                           #:start-session
                           #:create-folder-dispatcher-and-handler
+                          #:create-static-file-dispatcher-and-handler
                           #:*dispatch-table*)
   (:shadowing-import-from #:easy-routes
                           #:defroute)
