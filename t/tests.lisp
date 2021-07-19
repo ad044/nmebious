@@ -8,7 +8,7 @@
 (in-suite :nmebious)
 
 (def-fixture test-env ()
-  (let* ((test-board (first nmebious::*boards*)))
+  (let* ((test-board (caar nmebious::*boards*)))
     (if (hunchentoot:started-p nmebious::*server*)
         (format t "The application can't be running while testing. Stop the server and retry.")
         (unwind-protect
@@ -227,8 +227,8 @@
     ;; and their boards are correct in json
     (when (> (length nmebious::*boards*) 0)
       (postmodern:query (:delete-from 'post))
-      (let* ((first-board (first nmebious::*boards*))
-             (second-board (second nmebious::*boards*)))
+      (let* ((first-board (caar nmebious::*boards*))
+             (second-board (caadr nmebious::*boards*)))
 
         ;; insert random data
         (dotimes (i 2)
@@ -296,12 +296,11 @@
     (multiple-value-bind (body code headers)
         (dex:get (localhost "api" "config"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
-        (is  (equalp (nmebious::cassoc :boards  json-body)
-                     nmebious::*boards*))
+        
+        (is (equalp (cl-json::encode-json-alist-to-string (nmebious::cassoc :boards json-body))
+                    (cl-json::encode-json-alist-to-string nmebious::*boards*)))
         (is (equalp (nmebious::cassoc :post-get-limit json-body)
                     nmebious::*post-get-limit*))
-        (is (equalp (nmebious::cassoc :backgrounds json-body)
-                    nmebious::*backgrounds*))
         (is (equalp (nmebious::cassoc :accepted-mime-types json-body)
                     nmebious::*accepted-mime-types*))
         (is (equalp (nmebious::cassoc :max-file-size json-body)

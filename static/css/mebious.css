@@ -64,6 +64,7 @@ body, input {
     width: 40%;
     word-wrap: break-word;
     position: relative;
+    text-shadow: 2px 0 0 #000, -2px 0 0 #000, 0 2px 0 #000, 0 -2px 0 #000, 1px 1px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
 }
 
 .image {
@@ -103,11 +104,6 @@ body, input {
   text-decoration: none;
 }
 
-.boardlist a:hover {
-  color: #ffffff;
-  border-color: #ffffff;
-}
-
 .boardlist > * {
   margin: 0 15px;
 }
@@ -122,4 +118,60 @@ body, input {
   margin: 0 auto;
   display: block;
   margin-top: 5px;
+}
+
+.nmebious-logo {
+  position: absolute;
+  right: 30px;
+}
+
+.nmebious-logo img {
+  margin: 0 auto;
+  display: block;
+  margin-top: 5px;
+}
+
+.not-found-header {
+  font-size: 3em;
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  -moz-transform: translateX(-50%) translateY(-50%);
+  -webkit-transform: translateX(-50%) translateY(-50%);
+  transform: translateX(-50%) translateY(-50%);
+}
+
+.about {
+  padding: 25px;
+  border: 1px solid #00FF00;
+  text-align:center;
+  width: 800px;
+  margin:0 auto;
+}
+
+.about p {
+  font-size: 2em;
+}
+
+.about a {
+  font-size: 1em;
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.pagination-buttons {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  margin: 30px;
+}
+
+.pagination-buttons a {
+  background: #000;
+  font-size: 30px;
+  border: 1px solid #fff;
+  padding: 30px;
+  display: block;
+  color: #fff;
+  text-decoration: none;
 }

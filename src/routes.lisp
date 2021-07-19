@@ -34,8 +34,8 @@
 (defroute config ("/api/config" :method :get
                                 :decorators (@json)) ()
   (with-fail-handler (config)
-    (encode-json-alist-to-string (pairlis '(boards backgrounds accepted-mime-types post-get-limit max-file-size)
-                                          (list  *boards* *backgrounds* *accepted-mime-types* *post-get-limit* *max-file-size*)))))
+    (encode-json-alist-to-string (pairlis '(boards accepted-mime-types post-get-limit max-file-size)
+                                          (list  *boards* *accepted-mime-types* *post-get-limit* *max-file-size*)))))
 
 ;; RSS feed
 (defroute rss-feed ("/rss/:board" :method :get
@@ -81,9 +81,12 @@
 
 ;; View for a board
 (defroute web-board ("/boards/:board" :method :get
-                                      :decorators (@html)) ()
+                                      :decorators (@html))
+     ((page :init-form 0 :parameter-type 'integer))
   (with-fail-handler (web-board :type 'web-view)
-    (if (single-board-p)
+    (if (or (single-board-p)
+            (and (not *enable-pagination-on-default-frontend*)
+                 (> page 0)))
         (render-404)
         (progn
           (start-session)
@@ -91,16 +94,26 @@
             (setf (session-value :flash-message) nil)
             (after-get-request-validity-check (:board board)
               (setf (session-value :board) board)
-              (render-board board :error flash-message)))))))
+              (render-board board :page page :error flash-message)))))))
+
+;; About page (basic info on nmebious + configuration for this specific server and additional tips)
+(defroute web-about ("/about" :method :get
+                              :decorators (@html)) ()
+  (with-fail-handler (web-about :type 'web-view)
+    (render-about-page)))
 
 (defroute web-root ("/" :method :get
-                        :decorators (@html)) ()
+                        :decorators (@html))
+    ((page :init-form 0 :parameter-type 'integer))
   (with-fail-handler (web-root :type 'web-view)
     (if (single-board-p)
-        (progn
-          (start-session)
-          (let* ((flash-message (session-value :flash-message)))
-            (setf (session-value :flash-message) nil)
-            (setf (session-value :board) (first *boards*))
-            (render-board (first *boards*) :error flash-message)))
-        (redirect (format nil "/boards/~A" (first *boards*))))))
+        (if (and (not *enable-pagination-on-default-frontend*)
+                 (> page 0))
+            (render-404)
+            (progn
+              (start-session)
+              (let* ((flash-message (session-value :flash-message)))
+                (setf (session-value :flash-message) nil)
+                (setf (session-value :board) (caar *boards*))
+                (render-board (caar *boards*) :page page :error flash-message))))
+        (redirect (format nil "/boards/~A" (caar *boards*))))))

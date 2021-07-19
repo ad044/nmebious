@@ -29,6 +29,21 @@
          uri path)
         *dispatch-table*))
 
+(defun alist-keys (alist)
+  (loop for (key . value) in alist
+        collect key))
+
+(defun alist-values (alist)
+  (loop for (key . value) in alist
+        collect value))
+
+(defun color-for-board (board)
+  (cassoc :color (cassoc board *boards* :test #'string=)))
+
+(defun trim-whitespace (str)
+  (string-trim '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout)
+               str))
+
 ;; Crypto
 (defun hmac-sha256-bytes (secret text)
   (let ((hmac (make-hmac (ascii-string-to-byte-array secret) :sha256)))
@@ -62,7 +77,7 @@
                      (throw-request-error "No board data found.")))
           (submitted-text (or (cassoc "text" post-params :test #'string=)
                               (throw-request-error "No text data found in body.")))
-          (formatted-text (format nil "~A" submitted-text))
+          (formatted-text (trim-whitespace (format nil "~A" submitted-text)))
           (checksum (hex (md5sum-string formatted-text))))
      (after-text-post-validity-check (:text-data formatted-text
                                       :checksum checksum
@@ -174,14 +189,12 @@
      ,@body))
 
 (defun parse-board (board)
-  (let* ((trimmed-board (string-trim '(#\Space #\Newline #\Backspace #\Tab
-                                   #\Linefeed #\Page #\Return #\Rubout)
-                                 board)))
+  (let* ((trimmed-board (trim-whitespace board)))
     (cond ((string= "" trimmed-board) nil)
           (t trimmed-board))))
 
 (defun board-exists-p (board)
-  (member board *boards* :test #'string=))
+  (member board (alist-keys *boards*) :test #'string=))
 
 ;; File saving/handling
 (defun gen-filename ()
@@ -217,56 +230,3 @@
          (src-namestring (namestring src)))
     (ensure-directories-exist dest)
     (run-program (format-image src-namestring dest-namestring))))
-
-;; Text web view stuff
-(defun get-font ()
-  (let* ((fonts '("Times New Roman" "Times" "serif" "Arial"
-                  "Helvetica" "sans-serif" "Georgia" "Courier New"
-                  "Courier" "monospace")))
-    (nth (random (length fonts)) fonts)))
-
-(defun gen-color (hue)
-  (let* ((sat (random-in-range 0 100))
-         (lum (random-in-range 20 100)))
-    (format nil "hsl(~A, ~A%, ~A%)" hue sat lum)))
-
-(defun text-style ()
-  (let* ((color (gen-color 120))
-         (font-size (random-in-range 0.8 2.0))
-         (left (random-in-range 0.1 40.0))
-         (font-family (get-font)))
-    (format nil
-            "color: ~A; font-family: ~A; font-size: ~Aem; left: ~A%"
-            color font-family font-size left)))
-
-(defun corrupt (text)
-  (let* ((corruptions (pairlis '(#\a #\e #\i #\o #\u #\y #\s)
-                               '((#\á #\ã #\à #\@)
-                                 (#\è #\ë #\ê)
-                                 (#\ï #\î #\1)
-                                 (#\ø #\ò #\ô)
-                                 (#\ü #\ù)
-                                 (#\ÿ)
-                                 (#\$)))))
-    (map 'string #'(lambda (char)
-                     (let* ((corruptions-for-character (cassoc char corruptions)))
-                       (if (and corruptions-for-character
-                                (eql (random 2)
-                                     1))
-                           (nth (random (length corruptions-for-character)) corruptions-for-character)
-                           char))) text)))
-
-;; File web view stuff
-(defun stylize-text-post (post)
-  (acons :data (corrupt (cassoc :data post)) (acons :style (text-style) post)))
-
-(defun file-style ()
-  (let* ((z-index (- (random-in-range 1 10)))
-         (left (random-in-range 0.1 50.0))
-         (opacity (random-in-range 0.5 1.0))
-         (top (random-in-range 7.0 50.0)))
-    (format nil
-            "z-index: ~A; left: ~A%; opacity: ~A; top: ~A%" z-index left opacity top)))
-
-(defun stylize-file-post (post)
-  (acons :style (file-style) post))

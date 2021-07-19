@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="about">
+  <p>Configuration for this instance</p><br>
+  <hr>
+  <br>
+  <p>Maximum accepted file size: {{ max-file-size }} MB<br>
+    <br>
+    Boards:<br>
+        {% for (key . value) in boards %}
+            <a href="/boards/{{ board }}">{{ key }}</a><br>
+        {% endfor %}<br>
+
+            Backgrounds:<br>
+        {% for (key . value) in boards %}
+            {{ key }} - {% if value.background %}<a href="/static/backgrounds/{{ value.background }}" style="color: #ffffff; border-color: #ffffff" >{{ value.background }}</a>
+                        {% else %} No background. {% endif %}<br>
+                        {% endfor %}<br>
+
+          Colors:<br>
+        {% for (key . value) in boards %}
+            <p>{{ key }} - {% if value.color %}{{ value.color }}
+                        {% else %} Default (#00ff00){% endif %}
+              {% endfor %}</p><br>
+            <br>
+
+
+            <p>Accepted file formats:<br> {% for mime-type in accepted-mime-types %}
+            {{ mime-type }}<br>
+              {% endfor %}</p>
+
+            <br>
+<br>
+            <p>Pagination enabled: {% if pagination-enabled %}true{% else %} false{% endif %}</p>
+  <br><br>
+  <hr>
+  <br><br>
+  <p>If you would like to host your own instance or contribute, feel free to visit <a href="https://github.com/ad044/nmebious">the project's Github page.</a></p>
+  </div>
+{% endblock %}

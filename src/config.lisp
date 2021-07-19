@@ -12,26 +12,20 @@
                                           "image/gif"))
 
 ;; Boards (must be at least 1)
-(defparameter *boards* (list "main" "second"))
+;; For each board you can specify the name, the background, and the color.
+;; If you don't want to have a background, set it to NIL.
+;; If you don't want a custom color and want the default greenish look, set the color attribute to NIL.
+(defparameter *boards* '(("main" . ((:background . "main.jpg") (:color . nil)))
+                         ("second" . ((:background . nil) (:color . "#ffffff")))))
 
-;; Publically served static files
+;; Publicly served static files
 (defparameter *static-dir* (asdf:system-relative-pathname 'nmebious "static/"))
 
 ;; Where to store user uploaded content
 (defparameter *uploads-dir* (asdf:system-relative-pathname 'nmebious "uploads/"))
 
-;; Path on site to uploaded content
-(defparameter *uploads-web-path* "/uploads/")
-
 ;; URL for the website
 (defparameter *web-url* "https://example.website/")
-
-;; Background for each board (simply put filenames in the same order as *boards*)
-;; If you don't want a specific board to have a background, just put NIL at that point
-;; If you don't want any backgrounds, just set this parameter to NIL
-;; These files should be put inside static/bg/<filename>, where the filenames are the entries
-;; from this list
-(defparameter *backgrounds* (list "main.jpg" "second.jpg"))
 
 ;; Limit how many posts a user can retreive at once using the API
 (defparameter *post-get-limit* 1000)
@@ -63,3 +57,6 @@
 
 ;; How many text entries to display on page
 (defparameter *text-display-count* 20)
+
+;; Enable/disable pagination to allow users to view past posts
+(defparameter *enable-pagination-on-default-frontend* t)
