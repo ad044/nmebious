@@ -1,27 +1,35 @@
 {% extends "base.html" %}
 
+{% block additional-css %}
+    {% if board-data.color %}
+        <style>
+          #outline input,
+          #outline button,
+          #outline a,
+          .pagination-buttons a,
+          .boardlist a {
+            color: {{ board-data.color }};
+            border-color: {{ board-data.color }};
+          }
+        </style>
+        {% endif %}
+{% endblock %}
+
 {% block body %}
 <body {% if board-data.background %} style="background: url(/static/backgrounds/{{ board-data.background }})" {% endif %}>
       {% if error %}
         <span class="flash">{{ error }}</span>
-      {% else %}
       {% endif %}
-      <div id="outline">
+        <div id="outline" {% if error %} class="error" {% endif %} class="board-style">
          <form action="/web-view/submit/text" method="POST" id="text">
-           <input name="text" size="32" maxlength="512" id="txt_in" {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}
-                                                                    {% if board-data.color %} style="color: {{ board-data.color }}; border-color: {{ board-data.color }}" {% endif %}>
-           <button {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}
-                   {% if board-data.color %}  style="color: {{ board-data.color }}; border-color: {{ board-data.color }}"{% endif %}>in_txt</button>
+           <input name="text" size="32" maxlength="512" id="txt_in">
+           <button>in_txt</button>
          </form>
          <form action="/web-view/submit/file" method="POST" id="file" enctype="multipart/form-data">
-           <input name="file" type="file" {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}
-                                          {% if board-data.color %} style="color: {{ board-data.color }}; border-color: {{ board-data.color }}" {% endif %}>
-           <button {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}
-                   {% if board-data.color %} style="color: {{ board-data.color }}; border-color: {{ board-data.color }}" {% endif %}>in_img</button>
+           <input name="file" type="file">
+           <button>in_img</button>
          </form>
-         <a href="/rss/{% if boards %}{{ active-board }}{% endif %}"
-            {% if error %} style="color: #ff0000; border-color: #ff0000" {% endif %}
-            {% if board-data.color %} style="color: {{ board-data.color }}; border-color: {{ board-data.color }}" {% endif %}>rss</a>
+         <a href="/rss/{% if not single-board-p %}{{ active-board }}{% endif %}">rss</a>
       </div>
       <a class="github-logo" href="https://github.com/ad044/nmebious"><img src="/static/img/github.png"></a>
       <a class="nmebious-logo" href="/about"><img src="/static/favicon.ico"></a>
@@ -33,17 +41,19 @@
       {% for file in file-posts %}
       <img class="image" src="/uploads/{{ file.data }}" onerror="this.style.display='none'" style="{{ file.style }}"></img>
       {% endfor %}
-      <div class="boardlist">
-        {% for board in board-names %}
-            <a href="/boards/{{ board }}" {% if board-data.color %} style="color: {{ board-data.color }}; border-color: {{ board-data.color }}" {% endif %}>{{ board }}</a>
-        {% endfor %}
-      </div>
+      {% if not single-board-p %}
+        <div class="boardlist">
+            {% for board in board-names %}
+                <a href="/boards/{{ board }}">{{ board }}</a>
+            {% endfor %}
+        </div>
+      {% endif %}
       <div class="pagination-buttons">
         {% if prev-page %}
-            <a class="pagination-button" href="/boards/{{ active-board }}?page={{ prev-page }}">ᐱ</a><br>
+            <a href="/boards/{{ active-board }}?page={{ prev-page }}">ᐱ</a><br>
         {% endif %}
         {% if next-page %}
-            <a class="pagination-button" href="/boards/{{ active-board }}?page={{ next-page }}">ᐯ</a>
+            <a href="/boards/{{ active-board }}?page={{ next-page }}">ᐯ</a>
         {% endif %}
       </div>
 {% endblock %}

@@ -28,7 +28,7 @@ body, input {
 
 #outline {
     vertical-align: middle;
-    border: 1px solid #003300;
+    border: 1px solid #000;
     display: inline;
     float: left;
     padding: 2px;
@@ -169,9 +169,14 @@ body, input {
 .pagination-buttons a {
   background: #000;
   font-size: 30px;
-  border: 1px solid #fff;
+  border: 1px solid #0f0;
   padding: 30px;
   display: block;
-  color: #fff;
+  color: #0f0;
   text-decoration: none;
+}
+
+.error * {
+  color: #ff0000 !important;
+  border-color: #ff0000 !important;
 }

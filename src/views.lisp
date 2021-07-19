@@ -104,6 +104,7 @@
                       :text-posts stylized-text-posts
                       :file-posts stylized-file-posts
                       :active-board board
+                      :single-board-p (single-board-p)
                       :board-names (unless (single-board-p) (alist-keys *boards*))
                       :board-data (cassoc board *boards* :test #'string=)
                       :next-page (if (or

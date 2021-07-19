@@ -110,10 +110,10 @@
        (let* ((filename (gen-filename))
               (type (mime-file-type content-type))
               (full-filename (concatenate 'string filename "." type))
-              (dest (make-pathname :directory (pathname-directory *uploads-dir*)
+              (dest (make-pathname :directory (append (pathname-directory *uploads-dir*) (list board))
                                    :name filename
                                    :type type)))
-         (format-and-save-file src dest)
+         (format-and-save-file src dest board)
          (let* ((post-id (caar (insert-post full-filename checksum "file" board ip-hash))))
            (when *socket-server-enabled-p*
              (broadcast :type 'file
@@ -213,20 +213,20 @@
 (defun mime-type-accepted-p (mime-type)
   (member mime-type *accepted-mime-types* :test #'string=))
 
-(defun format-image (src dest)
+(defun format-image (src dest board)
   (list "convert"
         src
         "-resize" "30625@"
         "-colorspace" "gray"
-        "-fill" "green"
+        "-fill" (color-for-board board)
         "-tint" "80"
         "-dither" "FloydSteinberg"
         "-colors" "3"
         "-brightness-contrast" (format nil "-~A" (random-in-range 20 50))
         dest))
 
-(defun format-and-save-file (src dest)
+(defun format-and-save-file (src dest board)
   (let* ((dest-namestring (namestring dest))
          (src-namestring (namestring src)))
     (ensure-directories-exist dest)
-    (run-program (format-image src-namestring dest-namestring))))
+    (run-program (format-image src-namestring dest-namestring board))))
