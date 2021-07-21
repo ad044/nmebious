@@ -63,13 +63,23 @@
                           #:start-session
                           #:create-folder-dispatcher-and-handler
                           #:create-static-file-dispatcher-and-handler
-                          #:*dispatch-table*)
+                          #:*dispatch-table*
+                          #:set-cookie
+                          #:cookie-in
+                          #:request-method*)
   (:shadowing-import-from #:easy-routes
                           #:defroute)
   (:shadowing-import-from #:djula
                           #:add-template-directory
                           #:compile-template*
                           #:render-template*)
+  (:shadowing-import-from #:quri
+                          #:url-decode-params
+                          #:url-encode-params)
+  (:shadowing-import-from #:hunchentools
+                          #:session-csrf-token
+                          #:require-session-csrf-token
+                          #:harden-session-cookie)
   (:export #:start-server
            #:stop-server
            #:*port*))

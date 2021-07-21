@@ -23,13 +23,15 @@
                #:xml-emitter
                #:hunchensocket
                #:easy-routes+djula
-               #:dexador)
+               #:dexador
+               #:quri
+               #:hunchentools)
   :components ((:module "src"
                 :components
                 ((:file "package")
+                 (:file "utils")
                  (:file "config")
                  (:file "db")
-                 (:file "utils")
                  (:file "nmebious")
                  (:file "views")
                  (:file "decorators")

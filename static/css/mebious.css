@@ -42,7 +42,8 @@ body, input {
     vertical-align: middle;
 }
 
-#outline button, #outline a {
+#outline button, #outline a,
+.center form button {
     vertical-align: middle;
     text-decoration: none;
     border: 1px solid #00cc00;
@@ -113,16 +114,22 @@ body, input {
   right: 0;
 }
 
-.github-logo img {
+.github-logo img,
+.gear img {
   width: 50%;
   margin: 0 auto;
   display: block;
   margin-top: 5px;
 }
 
+.gear {
+  position: absolute;
+  right: 27.5px;
+}
+
 .nmebious-logo {
   position: absolute;
-  right: 30px;
+  right: 60px;
 }
 
 .nmebious-logo img {
@@ -141,7 +148,7 @@ body, input {
   transform: translateX(-50%) translateY(-50%);
 }
 
-.about {
+.center {
   padding: 25px;
   border: 1px solid #00FF00;
   text-align:center;
@@ -149,14 +156,26 @@ body, input {
   margin:0 auto;
 }
 
-.about p {
+.center p {
   font-size: 2em;
 }
 
-.about a {
+.center a {
   font-size: 1em;
   text-decoration: none;
   color: #ffffff;
+}
+
+.center label {
+  font-size: 18px;
+}
+
+.center form button {
+  font-size: 18px;
+}
+
+.center form a {
+  font-size: 20px;
 }
 
 .pagination-buttons {

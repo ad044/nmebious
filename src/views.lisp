@@ -5,6 +5,7 @@
 (defparameter +mebious.html+ (compile-template* "mebious.html"))
 (defparameter +404.html+ (compile-template* "404.html"))
 (defparameter +about.html+ (compile-template* "about.html"))
+(defparameter +preferences.html+ (compile-template* "preferences.html"))
 
 ;; Text stuff
 (defun get-font ()
@@ -33,7 +34,8 @@
                (h (/ (cond ((eql max r)
                             (+ (/ (- g b)
                                   d)
-                               (if (< g b) 6 0)))
+                               (if (< g b)
+                                   6 0)))
                            ((eql max g)
                             (+ (/ (- b r)
                                   d)
@@ -77,7 +79,8 @@
                                 (eql (random 2)
                                      1))
                            (nth (random (length corruptions-for-character)) corruptions-for-character)
-                           char))) text)))
+                           char)))
+         text)))
 
 (defun stylize-text-post (post)
   (acons :data (corrupt (cassoc :data post)) (acons :style (text-style (cassoc :board post)) post)))
@@ -105,8 +108,11 @@
                       :file-posts stylized-file-posts
                       :active-board board
                       :single-board-p (single-board-p)
-                      :board-names (unless (single-board-p) (alist-keys *boards*))
+                      :user-prefs (parse-user-preferences)
+                      :board-names (unless (single-board-p)
+                                     (alist-keys *boards*))
                       :board-data (cassoc board *boards* :test #'string=)
+                      :csrf-token (session-csrf-token)
                       :next-page (if (or
                                       (> (length text-posts) 0)
                                       (> (length file-posts) 0))
@@ -119,13 +125,24 @@
                       :error error)))
 
 (defun render-404 ()
-  (setf (content-type*) "text/html")
   (render-template* +404.html+ nil))
 
 (defun render-about-page ()
-  (list  *boards* *accepted-mime-types* *post-get-limit* *max-file-size*)
   (render-template* +about.html+ nil
                     :boards *boards*
                     :accepted-mime-types *accepted-mime-types*
                     :max-file-size (write-to-string  *max-file-size*)
-                    :pagination-enabled *enable-pagination-on-default-frontend*))
+                    :pagination-enabled-p *pagination-on-default-frontend-enabled-p*))
+
+(defun render-preferences-page ()
+  (let* ((user-prefs (parse-user-preferences))
+         (render-prefs (map 'list
+                            #'(lambda (pref)
+                                (let* ((keyword-pref (car pref)))
+                                  (car (acons keyword-pref (acons :current
+                                                                  (cassoc (string-downcase (car pref)) user-prefs :test #'string=)
+                                                                  (cassoc keyword-pref *web-user-preferences*))
+                                              nil))))
+                            *web-user-preferences*)))
+    (render-template* +preferences.html+ nil
+                      :preferences render-prefs)))

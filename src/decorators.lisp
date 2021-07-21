@@ -1,8 +1,15 @@
 (in-package #:nmebious)
 
+(defun @check-frontend-enabled (next)
+  (if *default-frontend-enabled-p*
+      (funcall next)
+      (render-404)))
+
 (defun @check-banned (next)
   (if (banned-p (hash-ip (real-remote-addr)))
-      (throw-request-error "You are banned.")
+      (progn
+        (setf (session-value :flash-message) "You are banned.")
+        (redirect-back-to-board))
       (funcall next)))
 
 (defun @html (next)

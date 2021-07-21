@@ -195,14 +195,34 @@
     ;; retrieving too many posts
     (multiple-value-bind (body code headers)
         (dex:get (localhost "api" "posts" (format nil
-                                            "?type=text&count=~A"
-                                            (write-to-string (+ 1
-                                                                nmebious::*post-get-limit*)))))
+                                                  "?type=text&count=~A"
+                                                  (write-to-string (+ 1
+                                                                      nmebious::*post-get-limit*)))))
       (let* ((json-body (cl-json:decode-json-from-string body))
              (message (nmebious::cassoc :message json-body)))
         (is (eql 400
                  code))
         (is (string= message "Tried to retrieve too many posts."))))
+
+    ;; retrieving with negative offset
+    (multiple-value-bind (body code headers)
+        (dex:get (localhost "api" "posts" (format nil
+                                                  "?type=text&offset=-1")))
+      (let* ((json-body (cl-json:decode-json-from-string body))
+             (message (nmebious::cassoc :message json-body)))
+        (is (eql 400
+                 code))
+        (is (string= message "Offset must be a positive number."))))
+
+    ;; retrieving with negative count
+    (multiple-value-bind (body code headers)
+        (dex:get (localhost "api" "posts" (format nil
+                                                  "?type=text&count=-1")))
+      (let* ((json-body (cl-json:decode-json-from-string body))
+             (message (nmebious::cassoc :message json-body)))
+        (is (eql 400
+                 code))
+        (is (string= message "Count must be a positive number."))))
 
     ;; incorrect board
     (when (not (nmebious::board-exists-p "thisboarddoesnotexist"))

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+<div class="center">
+  <form action="/preferences" method="POST">
+    <p>User-specific configuration options for this instance</p><br>
+    <hr>
+    <br>
+
+    {% for (key . value) in preferences %}
+    {% if value.depends-on %}
+        <input type="checkbox" name="{{ key }}" {% ifequal value.current "on" %}checked{% endifequal %}>
+        <label>{{ value.description }}</label><br><br>
+    {% endif %}
+    {% endfor %}
+
+        <button type="submit">Update preferences</button>
+
+<br><br>
+        <a href="/">Back</a>
+</form>
+</div>
+{% endblock %}

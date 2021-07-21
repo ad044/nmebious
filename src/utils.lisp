@@ -44,6 +44,38 @@
   (string-trim '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout)
                str))
 
+(defun make-keyword (name) (values (intern (string-upcase name) "KEYWORD")))
+
+(defun instance-has-backgrounds-p ()
+  (> (length  (loop for (key . value)
+                      in *boards*
+                    when (cassoc :background value)
+                      collect (cassoc :background value)))
+     0))
+
+(defun parse-user-preferences ()
+  (if (cookie-in "mebious_user")
+      (url-decode-params (cookie-in "mebious_user"))
+      (progn
+        (let* ((default-prefs (form-encoded-default-preferences)))
+          (set-cookie "mebious_user"
+                      :value default-prefs
+                      :max-age 315360000
+                      :path "/"
+                      :secure t
+                      :http-only t)
+          (url-decode-params default-prefs)))))
+
+(defun form-encoded-default-preferences ()
+  (url-encode-params (reduce #'(lambda (acc pref)
+                                 (acons (string-downcase (car pref))
+                                        (if  (cassoc :default (cdr pref) :test #'string=)
+                                             "on"
+                                             "off")
+                                        acc))
+                             *web-user-preferences*
+                             :initial-value '())))
+
 ;; Crypto
 (defun hmac-sha256-bytes (secret text)
   (let ((hmac (make-hmac (ascii-string-to-byte-array secret) :sha256)))
@@ -131,15 +163,16 @@
           (setf (return-code*) +http-bad-request+)
           (format *error-output* "Error: ~A~%" e)
           (return-from ,name
-            (cond ((eql ,type 'api)
-                   (encode-json-alist-to-string (pairlis '(message status)
-                                                         (list e "Error"))))
-                  ((eql ,type 'web-view-submission)
-                   (progn
-                     (setf (session-value :flash-message) e)
-                     (redirect-back-to-board)))
-                  ((eql ,type 'web-view)
-                   (render-404)))))
+            (case ,type
+              (api
+               (encode-json-alist-to-string (pairlis '(message status)
+                                                     (list e "Error"))))
+              (web-view-submission
+               (progn
+                 (setf (session-value :flash-message) e)
+                 (redirect-back-to-board)))
+              (web-view
+               (render-404)))))
 
         (fail (e)
           (format *error-output* "Error: ~A~%" e)
@@ -150,9 +183,18 @@
                     (error #'fail))
        ,@body)))
 
-(defmacro after-get-request-validity-check ((&key count type board) &body body)
+(defmacro after-get-request-validity-check ((&key count type board page offset) &body body)
   `(progn
-     (cond ((not (or (string= ,type "text")
+     (cond ((and ,offset
+                 (< ,offset 0))
+            (throw-request-error "Offset must be a positive number."))
+           ((and ,page
+                 (< ,page 0))
+            (throw-request-error "Page must be a positive number."))
+           ((and ,count
+                 (< ,count 0))
+            (throw-request-error "Count must be a positive number."))
+           ((not (or (string= ,type "text")
                      (string= ,type "file")
                      (null ,type)))
             (throw-request-error "Incorrect type."))
@@ -169,7 +211,7 @@
      (cond ((> (length ,text-data) 255)
             (throw-request-error "Text too long."))
            ((eql (length ,text-data) 0)
-            (throw-request-error "The submitted text can't be empty."))
+            (throw-request-error "Submitted text can't be empty."))
            ((not (board-exists-p ,board))
             (throw-request-error "Board does not exist."))
            ((and ,*allow-duplicates-after*

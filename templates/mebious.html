@@ -16,23 +16,30 @@
 {% endblock %}
 
 {% block body %}
-<body {% if board-data.background %} style="background: url(/static/backgrounds/{{ board-data.background }})" {% endif %}>
+<body {% if board-data.background and user-prefs.backgrounds == "on" %} style="background: url(/static/backgrounds/{{ board-data.background }})" {% endif %}>
       {% if error %}
         <span class="flash">{{ error }}</span>
       {% endif %}
         <div id="outline" {% if error %} class="error" {% endif %} class="board-style">
          <form action="/web-view/submit/text" method="POST" id="text">
            <input name="text" size="32" maxlength="512" id="txt_in">
+           <input type="hidden" name="csrf-token" value={{ csrf-token }}>
            <button>in_txt</button>
          </form>
          <form action="/web-view/submit/file" method="POST" id="file" enctype="multipart/form-data">
            <input name="file" type="file">
+           <input type="hidden" name="csrf-token" value={{ csrf-token }}>
            <button>in_img</button>
          </form>
          <a href="/rss/{% if not single-board-p %}{{ active-board }}{% endif %}">rss</a>
-      </div>
+        </div>
+
+                {% ifequal user-prefs.icons "on" %}
+
       <a class="github-logo" href="https://github.com/ad044/nmebious"><img src="/static/img/github.png"></a>
+      <a class="gear" href="/preferences"><img src="/static/img/gear.png"></a>
       <a class="nmebious-logo" href="/about"><img src="/static/favicon.ico"></a>
+      {% endifequal %}
       <div id="posts">
          {% for text in text-posts %}
             <p class="post" style="{{ text.style }}">{{ text.data }}</p>
@@ -41,13 +48,15 @@
       {% for file in file-posts %}
       <img class="image" src="/uploads/{{ file.data }}" onerror="this.style.display='none'" style="{{ file.style }}"></img>
       {% endfor %}
-      {% if not single-board-p %}
+      {% if not single-board-p and user-prefs.boardlist == "on" %}
         <div class="boardlist">
             {% for board in board-names %}
                 <a href="/boards/{{ board }}">{{ board }}</a>
             {% endfor %}
         </div>
       {% endif %}
+
+        {% ifequal user-prefs.pagination "on" %}
       <div class="pagination-buttons">
         {% if prev-page %}
             <a href="/boards/{{ active-board }}?page={{ prev-page }}">ᐱ</a><br>
@@ -55,5 +64,6 @@
         {% if next-page %}
             <a href="/boards/{{ active-board }}?page={{ next-page }}">ᐯ</a>
         {% endif %}
+{% endifequal %}
       </div>
 {% endblock %}

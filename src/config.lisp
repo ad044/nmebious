@@ -52,6 +52,9 @@
 
 ;; ==================       Configuration for the default frontend (if enabled)        ======================
 
+;; Enable/disable default frontend
+(defparameter *default-frontend-enabled-p* t)
+
 ;; How many file entries to display on page
 (defparameter *file-display-count* 10)
 
@@ -59,4 +62,18 @@
 (defparameter *text-display-count* 20)
 
 ;; Enable/disable pagination to allow users to view past posts
-(defparameter *enable-pagination-on-default-frontend* t)
+(defparameter *pagination-on-default-frontend-enabled-p* t)
+
+;; User preferences for the frontend
+(defparameter *web-user-preferences* `((:icons . ((:description . "Display icons (top right corner) on the main page")
+                                                  (:default . t)
+                                                  (:depends-on . t)))
+                                       (:pagination . ((:description . "Display pagination buttons")
+                                                       (:default . t)
+                                                       (:depends-on . ,*pagination-on-default-frontend-enabled-p*)))
+                                       (:boardlist . ((:description . "Display board list in the bottom middle of the page")
+                                                      (:default . t)
+                                                      (:depends-on . ,(not (single-board-p)))))
+                                       (:backgrounds . ((:description . "Display custom backgrounds for boards (if set by the instance)")
+                                                        (:default . nil)
+                                                        (:depends-on . ,(instance-has-backgrounds-p))))))
