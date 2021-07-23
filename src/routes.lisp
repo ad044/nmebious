@@ -2,38 +2,38 @@
 
 ;; POST text via API
 (defroute api-submit-text ("/api/submit/text" :method :post
-                                              :decorators (@json @check-banned)) ()
+                                              :decorators (@json @check-banned @check-api-key)) ()
   (with-fail-handler (api-submit-text :type 'api)
-    (after-submit-text *success*)))
+    (after-submit-text (api-success))))
 
 ;; POST file via API
 (defroute api-submit-file ("/api/submit/file" :method :post
-                                              :decorators (@json @check-banned)) ()
+                                              :decorators (@json @check-banned @check-api-key)) ()
   (with-fail-handler (api-submit-file :type 'api)
-    (after-submit-file *success*)))
+    (after-submit-file (api-success))))
 
 ;; GET posts via API
 (defroute get-posts ("/api/posts/:board" :method :get
-                                         :decorators (@json))
+                                         :decorators (@json @check-api-key))
     ((type :parameter-type 'string)
      (count :init-form 15 :parameter-type 'integer)
      (offset :init-form 0 :parameter-type 'integer))
   (with-fail-handler (get-posts :type 'api)
     (let* ((board (parse-board board))
            (ip-hash (hash-ip (real-remote-addr))))
-      (after-get-request-validity-check (:count count
-                                         :offset offset
-                                         :type type
-                                         :board board)
-        (encode-json-alist-to-string (pairlis '(posts)
-                                              (list (select-posts count
-                                                                  offset
-                                                                  :type type
-                                                                  :board board))))))))
+      (get-request-validity-check :count count
+                                  :offset offset
+                                  :type type
+                                  :board board)
+      (encode-json-alist-to-string (pairlis '(posts)
+                                            (list (select-posts count
+                                                                offset
+                                                                :type type
+                                                                :board board)))))))
 
 ;; Server configuration in JSON format
 (defroute config ("/api/config" :method :get
-                                :decorators (@json)) ()
+                                :decorators (@json @check-api-key)) ()
   (with-fail-handler (config)
     (encode-json-alist-to-string (pairlis '(boards accepted-mime-types post-get-limit max-file-size)
                                           (list  *boards* *accepted-mime-types* *post-get-limit* *max-file-size*)))))
@@ -47,8 +47,8 @@
       (if (and board
                (single-board-p))
           (render-404)
-          (after-get-request-validity-check (:board board
-                                             :page page)
+          (progn
+            (get-request-validity-check :board board :page page)
             (let* ((posts (select-posts 30 (* page 30) :board board))
                    (sorted-posts (sort posts
                                        #'sort-posts-by-id)))
@@ -97,10 +97,9 @@
           (harden-session-cookie)
           (let* ((flash-message (session-value :flash-message)))
             (setf (session-value :flash-message) nil)
-            (after-get-request-validity-check (:board board
-                                               :page page)
-              (setf (session-value :board) board)
-              (render-board board :page page :error flash-message)))))))
+            (get-request-validity-check :board board :page page)
+            (setf (session-value :board) board)
+            (render-board board :page page :error flash-message))))))
 
 ;; About page (basic info on nmebious + configuration for this specific server and additional tips)
 (defroute web-about ("/about" :method :get
@@ -147,7 +146,7 @@
               (harden-session-cookie)
               (let* ((flash-message (session-value :flash-message)))
                 (setf (session-value :flash-message) nil)
-                (after-get-request-validity-check (:page page)
-                  (setf (session-value :board) (caar *boards*))
-                  (render-board (caar *boards*) :page page :error flash-message)))))
-        (redirect (format nil "/boards/~A" (caar *boards*))))))
+                (get-request-validity-check :page page)
+                (setf (session-value :board) (caar *boards*))
+                (render-board (caar *boards*) :page page :error flash-message)))))
+        (redirect (format nil "/boards/~A" (caar *boards*)))))

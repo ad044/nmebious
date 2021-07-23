@@ -8,7 +8,11 @@
 (in-suite :nmebious)
 
 (def-fixture test-env ()
-  (let* ((test-board (caar nmebious::*boards*)))
+  (let* ((test-board "first")
+         (allow-duplicates-default nmebious::*allow-duplicates-after*)
+         (api-requires-key-default nmebious::*api-requires-key*)
+         (accepted-mime-types-default nmebious::*accepted-mime-types*)
+         (boards-default nmebious::*boards*))
     (if (hunchentoot:started-p nmebious::*server*)
         (format t "The application can't be running while testing. Stop the server and retry.")
         (unwind-protect
@@ -19,12 +23,20 @@
                                             nmebious::*db-user*
                                             nmebious::*db-pass*
                                             "localhost")
+               (setf nmebious::*boards* '(("first" . ((:background . nil) (:color . nil)))
+                                          ("second" . ((:background . nil) (:color . nil)))))
+               (setf nmebious::*api-requires-key* nil)
                (nmebious::setup-db)
-               (postmodern:query (:delete-from 'post))
                (handler-bind ((dex:http-request-failed #'dex:ignore-and-continue))
                  (&body)))
           (progn
+            (postmodern:query (:delete-from 'post))
+            (postmodern:query (:delete-from 'api-key))
             (postmodern:disconnect-toplevel)
+            (setf nmebious::*allow-duplicates-after* allow-duplicates-default)
+            (setf nmebious::*api-requires-key* api-requires-key-default)
+            (setf nmebious::*accepted-mime-types* accepted-mime-types-default)
+            (setf nmebious::*boards* boards-default)
             (when (hunchentoot:started-p nmebious::*server*)
               (nmebious::stop-hunchentoot)))))))
 
@@ -45,11 +57,11 @@
 
 (defmacro expect-error-with-message (message)
   `(let* ((json-body (cl-json:decode-json-from-string body))
-                   (status (nmebious::cassoc :status json-body))
-                   (message (nmebious::cassoc :message json-body)))
-              (is (eql code 400))
-              (is (string= "Error" status))
-              (is (string= message ,message))))
+          (status (nmebious::cassoc :status json-body))
+          (message (nmebious::cassoc :message json-body)))
+     (is (eql code 400))
+     (is (string= "Error" status))
+     (is (string= message ,message))))
 
 (defmacro with-submit-text ((text board) &body body)
   `(multiple-value-bind (body code headers uri)
@@ -87,11 +99,10 @@
     (with-submit-text ("testphrase" "doesntexist")
       (expect-error-with-message "Board does not exist."))
 
-    ;; duplicate checking works (if enabled)
-    (when (and nmebious::*allow-duplicates-after*
-               (> nmebious::*allow-duplicates-after* 0))
-      (with-submit-text ("firsttest" test-board)
-        (expect-error-with-message "Duplicate post.")))
+    ;; duplicate checking works
+    (setf nmebious::*allow-duplicates-after* 5)
+    (with-submit-text ("firsttest" test-board)
+      (expect-error-with-message "Duplicate post."))
 
     ;; text too long
     (with-submit-text ((make-string 256 :initial-element #\a) test-board)
@@ -111,27 +122,44 @@
                        :content (format nil "incorrect=~A&text=~A" test-board "test")
                        :headers '((:content-type . "application/x-www-form-urlencoded")))
       (declare (ignore headers uri))
-      (expect-error-with-message "No board data found."))))
+      (expect-error-with-message "No board data found."))
+
+    ;; api key check without providing a key
+    (setf nmebious::*api-requires-key* t)
+    (with-submit-text ("keytest" test-board)
+      (expect-error-with-message "Must provide an API key."))
+
+    ;; with valid key
+    (nmebious::add-api-key "test-key")
+    (multiple-value-bind (body code headers uri)
+        (dexador:post  (localhost "api" "submit" "text")
+                       :content (format nil "board=~A&text=~A&api-key=test-key" test-board "test")
+                       :headers '((:content-type . "application/x-www-form-urlencoded")))
+      (declare (ignore headers uri))
+      (expect-success))
+
+    ;; with invalid key
+    (multiple-value-bind (body code headers uri)
+        (dexador:post  (localhost "api" "submit" "text")
+                       :content (format nil "board=~A&text=~A&api-key=bad-key" test-board "test")
+                       :headers '((:content-type . "application/x-www-form-urlencoded")))
+      (declare (ignore headers uri))
+      (expect-error-with-message "Invalid API key."))))
+
 
 (test submit-file
   (with-fixture test-env ()
     (postmodern:query (:delete-from 'post))
 
-    ;; jpg image (supported format)
-    (when (nmebious::mime-type-accepted-p "image/jpeg")
-      (with-submit-file ("test.jpg" test-board)
-        (expect-success))
+    (setf nmebious::*accepted-mime-types* '("image/jpeg"))
 
-      ;; duplicate check (if enabled)
-      (when (and nmebious::*allow-duplicates-after*
-                 (> nmebious::*allow-duplicates-after* 0))
-        (with-submit-file ("test.jpg" test-board)
-          (expect-error-with-message "Duplicate post."))))
+    ;; jpg image (supported format)
+    (with-submit-file ("test.jpg" test-board)
+      (expect-success))
 
     ;; unsupported format
-    (when (not (nmebious::mime-type-accepted-p "image/tiff"))
-      (with-submit-file ("test.tiff" test-board)
-        (expect-error-with-message "Content type not accepted: image/tiff." )))
+    (with-submit-file ("test.tiff" test-board)
+      (expect-error-with-message "Content type not accepted: image/tiff." ))
 
     ;; incorrectly named key
     (multiple-value-bind (body code headers uri)
@@ -139,7 +167,31 @@
                   :content (pairlis '("test" "board")
                                     (list (test-file "test.jpg") test-board)))
       (declare (ignore headers uri))
-      (expect-error-with-message "No file data found."))))
+      (expect-error-with-message "No file data found."))
+
+    (setf nmebious::*api-requires-key* t)
+
+    ;; without api key
+    (with-submit-file ("test.jpg" test-board)
+      (expect-error-with-message "Must provide an API key."))
+
+    ;; with valid key
+    (nmebious::add-api-key "test-key")
+    (setf nmebious::*allow-duplicates-after* nil)
+    (multiple-value-bind (body code headers uri)
+        (dex:post (localhost "api" "submit" "file")
+                  :content (pairlis '("file" "board" "api-key")
+                                    (list (test-file "test.jpg") test-board "test-key")))
+      (declare (ignore headers uri))
+      (expect-success))
+
+    ;; with invalid key
+    (multiple-value-bind (body code headers uri)
+        (dex:post (localhost "api" "submit" "file")
+                  :content (pairlis '("test" "board" "api-key")
+                                    (list (test-file "test.jpg") test-board "bad-key")))
+      (declare (ignore headers uri))
+      (expect-error-with-message "Invalid API key."))))
 
 (test get-posts
   (with-fixture test-env ()
@@ -225,14 +277,13 @@
         (is (string= message "Count must be a positive number."))))
 
     ;; incorrect board
-    (when (not (nmebious::board-exists-p "thisboarddoesnotexist"))
-      (multiple-value-bind (body code headers)
-          (dex:get (localhost "api" "posts" "thisboarddoesnotexist"))
-        (let* ((json-body (cl-json:decode-json-from-string body))
-               (message (nmebious::cassoc :message json-body)))
-          (is (eql 400
-                   code))
-          (is (string= message "Board does not exist.")))))
+    (multiple-value-bind (body code headers)
+        (dex:get (localhost "api" "posts" "thisboarddoesnotexist"))
+      (let* ((json-body (cl-json:decode-json-from-string body))
+             (message (nmebious::cassoc :message json-body)))
+        (is (eql 400
+                 code))
+        (is (string= message "Board does not exist."))))
 
     ;; incorrect type
     (multiple-value-bind (body code headers)
@@ -243,71 +294,69 @@
                  code))
         (is (string= message "Incorrect type."))))
 
-    ;; submit 1 to each board, check if length 2 with no board specified, check if 1 each
-    ;; and their boards are correct in json
-    (when (> (length nmebious::*boards*) 0)
-      (postmodern:query (:delete-from 'post))
-      (let* ((first-board (caar nmebious::*boards*))
-             (second-board (caadr nmebious::*boards*)))
+    (postmodern:query (:delete-from 'post))
 
-        ;; insert random data
-        (dotimes (i 2)
-          (dexador:post  (localhost "api" "submit" "text")
-                         :content (format nil "board=~A&text=~A" first-board i)
-                         :headers '((:content-type . "application/x-www-form-urlencoded")))
-          (dexador:post  (localhost "api" "submit" "text")
-                         :content (format nil "board=~A&text=~A" second-board i)
-                         :headers '((:content-type . "application/x-www-form-urlencoded"))))
+    (let* ((first-board (caar nmebious::*boards*))
+           (second-board (caadr nmebious::*boards*)))
 
-        ;; check if 2 posts on first board
-        (multiple-value-bind (body code headers)
-            (dex:get (localhost "api" "posts" (format nil "~A?type=text" first-board)))
-          (let* ((json-body (cl-json:decode-json-from-string body)))
-            (is (eql (length json-body)
-                     1))
-            (is (eql (length (nmebious::cassoc :posts
-                                               json-body))
-                     2))))
+      ;; insert random data
+      (dotimes (i 2)
+        (dexador:post  (localhost "api" "submit" "text")
+                       :content (format nil "board=~A&text=~A" first-board i)
+                       :headers '((:content-type . "application/x-www-form-urlencoded")))
+        (dexador:post  (localhost "api" "submit" "text")
+                       :content (format nil "board=~A&text=~A" second-board i)
+                       :headers '((:content-type . "application/x-www-form-urlencoded"))))
 
-        ;; check if 2 posts on second board
-        (multiple-value-bind (body code headers)
-            (dex:get (localhost "api" "posts" (format nil "~A?type=text" second-board)))
-          (let* ((json-body (cl-json:decode-json-from-string body)))
-            (is (eql (length json-body)
-                     1))
-            (is (eql (length (nmebious::cassoc :posts
-                                               json-body))
-                     2))))
+      ;; check if 2 posts on first board
+      (multiple-value-bind (body code headers)
+          (dex:get (localhost "api" "posts" (format nil "~A?type=text" first-board)))
+        (let* ((json-body (cl-json:decode-json-from-string body)))
+          (is (eql (length json-body)
+                   1))
+          (is (eql (length (nmebious::cassoc :posts
+                                             json-body))
+                   2))))
 
-        ;; both together should be 4
-        (multiple-value-bind (body code headers)
-            (dex:get (localhost "api" "posts" "?type=text"))
-          (let* ((json-body (cl-json:decode-json-from-string body)))
-            (is (eql (length json-body)
-                     1))
-            (is (eql (length (nmebious::cassoc :posts
-                                               json-body))
-                     4))))
+      ;; check if 2 posts on second board
+      (multiple-value-bind (body code headers)
+          (dex:get (localhost "api" "posts" (format nil "~A?type=text" second-board)))
+        (let* ((json-body (cl-json:decode-json-from-string body)))
+          (is (eql (length json-body)
+                   1))
+          (is (eql (length (nmebious::cassoc :posts
+                                             json-body))
+                   2))))
 
-        ;; offset works
-        (multiple-value-bind (body code headers)
-            (dex:get (localhost "api" "posts" "?type=text&offset=1"))
-          (let* ((json-body (cl-json:decode-json-from-string body)))
-            (is (eql (length json-body)
-                     1))
-            (is (eql (length (nmebious::cassoc :posts
-                                               json-body))
-                     3))))
+      ;; both together should be 4
+      (multiple-value-bind (body code headers)
+          (dex:get (localhost "api" "posts" "?type=text"))
+        (let* ((json-body (cl-json:decode-json-from-string body)))
+          (is (eql (length json-body)
+                   1))
+          (is (eql (length (nmebious::cassoc :posts
+                                             json-body))
+                   4))))
 
-        ;; count works
-        (multiple-value-bind (body code headers)
-            (dex:get (localhost "api" "posts" "?type=text&count=1"))
-          (let* ((json-body (cl-json:decode-json-from-string body)))
-            (is (eql (length json-body)
-                     1))
-            (is (eql (length (nmebious::cassoc :posts
-                                               json-body))
-                     1))))))))
+      ;; offset works
+      (multiple-value-bind (body code headers)
+          (dex:get (localhost "api" "posts" "?type=text&offset=1"))
+        (let* ((json-body (cl-json:decode-json-from-string body)))
+          (is (eql (length json-body)
+                   1))
+          (is (eql (length (nmebious::cassoc :posts
+                                             json-body))
+                   3))))
+
+      ;; count works
+      (multiple-value-bind (body code headers)
+          (dex:get (localhost "api" "posts" "?type=text&count=1"))
+        (let* ((json-body (cl-json:decode-json-from-string body)))
+          (is (eql (length json-body)
+                   1))
+          (is (eql (length (nmebious::cassoc :posts
+                                             json-body))
+                   1)))))))
 
 
 (test get-server-config
@@ -318,10 +367,11 @@
       (let* ((json-body (cl-json:decode-json-from-string body)))
         
         (is (equalp (cl-json::encode-json-alist-to-string (nmebious::cassoc :boards json-body))
-                    (cl-json::encode-json-alist-to-string nmebious::*boards*)))
+                    (cl-json::encode-json-alist-to-string '(("first" . ((:background . nil) (:color . nil)))
+                                                            ("second" . ((:background . nil) (:color . nil))))))
         (is (equalp (nmebious::cassoc :post-get-limit json-body)
                     nmebious::*post-get-limit*))
         (is (equalp (nmebious::cassoc :accepted-mime-types json-body)
                     nmebious::*accepted-mime-types*))
         (is (equalp (nmebious::cassoc :max-file-size json-body)
-                    nmebious::*max-file-size*))))))
+                    nmebious::*max-file-size*)))))))

@@ -10,7 +10,9 @@
                          (checksum :type string)
                          (data :type string))))
   (query (:create-table (:if-not-exists 'ban)
-                        ((ip-hash :type string)))))
+                        ((ip-hash :type string))))
+  (query (:create-table (:if-not-exists 'api-key)
+                        ((key :type string)))))
 
 (defun insert-post (data checksum type board ip-hash)
   (query  (:insert-rows-into 'post
@@ -52,6 +54,9 @@
           :from table
            :where (:= col val))))
 
+(defun api-key-valid-p (api-key)
+  (exists-p api-key 'api-key 'key))
+
 (defun banned-p (ip-hash)
   (exists-p ip-hash 'ban 'ip-hash))
 
@@ -62,3 +67,5 @@
   (query (:delete-from 'ban
           :where (:= 'ip-hash ip-hash))))
 
+(defun add-api-key (api-key)
+  (query (:insert-into 'api-key :set 'key api-key)))

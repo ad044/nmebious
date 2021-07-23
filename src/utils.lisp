@@ -17,7 +17,8 @@
   (> (cassoc :id a)
      (cassoc :id b)))
 
-(defparameter *success* (encode-json-alist-to-string (pairlis '(status) '("Success"))))
+(defun without-last (l)
+  (reverse (cdr (reverse l))))
 
 (defun define-static-resource (uri path)
   (push (create-folder-dispatcher-and-handler
@@ -33,18 +34,12 @@
   (loop for (key . value) in alist
         collect key))
 
-(defun alist-values (alist)
-  (loop for (key . value) in alist
-        collect value))
-
 (defun color-for-board (board)
   (cassoc :color (cassoc board *boards* :test #'string=)))
 
 (defun trim-whitespace (str)
   (string-trim '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout)
                str))
-
-(defun make-keyword (name) (values (intern (string-upcase name) "KEYWORD")))
 
 (defun instance-has-backgrounds-p ()
   (> (length  (loop for (key . value)
@@ -92,6 +87,13 @@
   (eql (length *boards*) 1))
 
 ;; Request handling
+(defun api-success ()
+  (encode-json-alist-to-string (pairlis '(status) '("Success"))))
+
+(defun api-fail-with-message (msg)
+  (setf (return-code*) +http-bad-request+)
+  (encode-json-alist-to-string (pairlis '(message status)
+                                        (list msg "Error"))))
 
 (defmacro redirect-back-to-board ()
   `(if ,(single-board-p)
@@ -111,48 +113,49 @@
                               (throw-request-error "No text data found in body.")))
           (formatted-text (trim-whitespace (format nil "~A" submitted-text)))
           (checksum (hex (md5sum-string formatted-text))))
-     (after-text-post-validity-check (:text-data formatted-text
-                                      :checksum checksum
-                                      :board board
-                                      :ip-hash ip-hash)
-       (let* ((post-id (caar (insert-post formatted-text checksum "text" board ip-hash))))
-         (when *socket-server-enabled-p*
-           (broadcast :type 'text
-                      :post-id post-id
-                      :data formatted-text
-                      :board board))
-         ,@body))))
+     (text-post-validity-check :text-data formatted-text
+                               :checksum checksum
+                               :board board
+                               :ip-hash ip-hash)
+     (let* ((post-id (caar (insert-post formatted-text checksum "text" board ip-hash))))
+       (when *socket-server-enabled-p*
+         (broadcast :type 'text
+                    :post-id post-id
+                    :data formatted-text
+                    :board board))
+       ,@body)))
 
 (defmacro after-submit-file (&body body)
-  `(bind (((src filename content-type) (or (cassoc "file"
-                                                   (post-parameters*)
+  `(bind ((post-params (post-parameters*))
+          ((src filename content-type) (or (cassoc "file"
+                                                   post-params
                                                    :test #'string=)
                                            (throw-request-error "No file data found.")))
-           (board (or (cassoc "board"
-                              (post-parameters*)
-                              :test #'string=)
-                      (session-value :board)
-                      (throw-request-error "No board data found.")))
-           (ip-hash (hash-ip (real-remote-addr)))
-           (checksum (hex (md5sum-file src))))
-     (after-file-post-validity-check (:content-type content-type
-                                      :checksum checksum
-                                      :board board
-                                      :ip-hash ip-hash)
-       (let* ((filename (gen-filename))
-              (type (mime-file-type content-type))
-              (full-filename (concatenate 'string filename "." type))
-              (dest (make-pathname :directory (append (pathname-directory *uploads-dir*) (list board))
-                                   :name filename
-                                   :type type)))
-         (format-and-save-file src dest board)
-         (let* ((post-id (caar (insert-post full-filename checksum "file" board ip-hash))))
-           (when *socket-server-enabled-p*
-             (broadcast :type 'file
-                        :post-id post-id
-                        :data full-filename
-                        :board board))
-           ,@body)))))
+          (board (or (cassoc "board"
+                             post-params
+                             :test #'string=)
+                     (session-value :board)
+                     (throw-request-error "No board data found.")))
+          (ip-hash (hash-ip (real-remote-addr)))
+          (checksum (hex (md5sum-file src))))
+     (file-post-validity-check :content-type content-type
+                               :checksum checksum
+                               :board board
+                               :ip-hash ip-hash)
+     (let* ((filename (gen-filename))
+            (type (mime-file-type content-type))
+            (full-filename (concatenate 'string filename "." type))
+            (dest (make-pathname :directory (append (pathname-directory *uploads-dir*) (list board))
+                                 :name filename
+                                 :type type)))
+       (format-and-save-file src dest board)
+       (let* ((post-id (caar (insert-post full-filename checksum "file" board ip-hash))))
+         (when *socket-server-enabled-p*
+           (broadcast :type 'file
+                      :post-id post-id
+                      :data full-filename
+                      :board board))
+         ,@body))))
 
 (defmacro throw-request-error (msg)
   `(error 'request-error :message ,msg))
@@ -165,8 +168,7 @@
           (return-from ,name
             (case ,type
               (api
-               (encode-json-alist-to-string (pairlis '(message status)
-                                                     (list e "Error"))))
+               (api-fail-with-message e))
               (web-view-submission
                (progn
                  (setf (session-value :flash-message) e)
@@ -183,52 +185,46 @@
                     (error #'fail))
        ,@body)))
 
-(defmacro after-get-request-validity-check ((&key count type board page offset) &body body)
-  `(progn
-     (cond ((and ,offset
-                 (< ,offset 0))
-            (throw-request-error "Offset must be a positive number."))
-           ((and ,page
-                 (< ,page 0))
-            (throw-request-error "Page must be a positive number."))
-           ((and ,count
-                 (< ,count 0))
-            (throw-request-error "Count must be a positive number."))
-           ((not (or (string= ,type "text")
-                     (string= ,type "file")
-                     (null ,type)))
-            (throw-request-error "Incorrect type."))
-           ((and ,board
-                 (not (board-exists-p ,board)))
-            (throw-request-error "Board does not exist."))
-           ((and ,count
-                 (> count *post-get-limit*))
-            (throw-request-error "Tried to retrieve too many posts.")))
-     ,@body))
+(defun get-request-validity-check (&key count type board page offset)
+  (cond ((and offset
+              (< offset 0))
+         (throw-request-error "Offset must be a positive number."))
+        ((and page
+              (< page 0))
+         (throw-request-error "Page must be a positive number."))
+        ((and count
+              (< count 0))
+         (throw-request-error "Count must be a positive number."))
+        ((not (or (string= type "text")
+                  (string= type "file")
+                  (null type)))
+         (throw-request-error "Incorrect type."))
+        ((and board
+              (not (board-exists-p board)))
+         (throw-request-error "Board does not exist."))
+        ((and count
+              (> count *post-get-limit*))
+         (throw-request-error "Tried to retrieve too many posts."))))
 
-(defmacro after-text-post-validity-check ((&key text-data checksum board ip-hash) &body body)
-  `(progn
-     (cond ((> (length ,text-data) 255)
-            (throw-request-error "Text too long."))
-           ((eql (length ,text-data) 0)
-            (throw-request-error "Submitted text can't be empty."))
-           ((not (board-exists-p ,board))
-            (throw-request-error "Board does not exist."))
-           ((and ,*allow-duplicates-after*
-                 (post-duplicate-p ,checksum ,ip-hash ,*allow-duplicates-after* ,board))
-            (throw-request-error "Duplicate post.")))
-     ,@body))
+(defun text-post-validity-check (&key text-data checksum board ip-hash)
+  (cond ((> (length text-data) 255)
+         (throw-request-error "Text too long."))
+        ((eql (length text-data) 0)
+         (throw-request-error "Submitted text can't be empty."))
+        ((not (board-exists-p board))
+         (throw-request-error "Board does not exist."))
+        ((and *allow-duplicates-after*
+              (post-duplicate-p checksum ip-hash *allow-duplicates-after* board))
+         (throw-request-error "Duplicate post."))))
 
-(defmacro after-file-post-validity-check ((&key content-type checksum board ip-hash) &body body)
-  `(progn
-     (cond ((not (mime-type-accepted-p ,content-type))
-            (throw-request-error (format nil "Content type not accepted: ~A." ,content-type)))
-           ((not (board-exists-p ,board))
-            (throw-request-error "Board does not exist."))
-           ((and ,*allow-duplicates-after*
-                 (post-duplicate-p ,checksum ,ip-hash ,*allow-duplicates-after* ,board))
-            (throw-request-error "Duplicate post.")))
-     ,@body))
+(defun file-post-validity-check (&key content-type checksum board ip-hash)
+  (cond ((not (mime-type-accepted-p content-type))
+         (throw-request-error (format nil "Content type not accepted: ~A." content-type)))
+        ((not (board-exists-p board))
+         (throw-request-error "Board does not exist."))
+        ((and *allow-duplicates-after*
+              (post-duplicate-p checksum ip-hash *allow-duplicates-after* board))
+         (throw-request-error "Duplicate post."))))
 
 (defun parse-board (board)
   (let* ((trimmed-board (trim-whitespace board)))

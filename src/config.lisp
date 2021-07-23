@@ -3,13 +3,14 @@
 ;; Which port to run hunchentoot on
 (defparameter *port* 8080)
 
+;; Make the API accessible to anyone or require a key.
+(defparameter *api-requires-key* nil)
+
 ;; Whether or not to enable socket server for front-ends that support live updates
 (defparameter *socket-server-enabled-p* t)
 
 ;; Accepted mime types for file submissions
-(defparameter *accepted-mime-types* (list "image/png"
-                                          "image/jpeg"
-                                          "image/gif"))
+(defparameter *accepted-mime-types* '("image/png" "image/jpeg" "image/gif"))
 
 ;; Boards (must be at least 1)
 ;; For each board you can specify the name, the background, and the color.

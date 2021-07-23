@@ -99,36 +99,46 @@
 
 ;; Rendering
 (defun render-board (board &key error (page 0))
-  (let* ((text-posts (select-posts *text-display-count* (* page *text-display-count*) :type "text" :board board))
-         (file-posts (select-posts *file-display-count* (* page *file-display-count*) :type "file" :board board))
-         (stylized-text-posts (map 'list #'stylize-text-post text-posts))
-         (stylized-file-posts (map 'list #'stylize-file-post file-posts)))
-    (render-template* +mebious.html+ nil
-                      :text-posts stylized-text-posts
-                      :file-posts stylized-file-posts
-                      :active-board board
-                      :single-board-p (single-board-p)
-                      :user-prefs (parse-user-preferences)
-                      :board-names (unless (single-board-p)
-                                     (alist-keys *boards*))
-                      :board-data (cassoc board *boards* :test #'string=)
-                      :csrf-token (session-csrf-token)
-                      :next-page (if (or
-                                      (> (length text-posts) 0)
-                                      (> (length file-posts) 0))
-                                     (+ page 1)
-                                     nil)
-                      :prev-page (if
-                                  (> page 0)
-                                  (- page 1)
-                                  nil)
-                      :error error)))
+  ;; we get 1 extra post for each type to determine whether or not there is a next page
+  ;; this is hacky, but its the most optimal solution i can think of currently.
+  ;; if you have a better idea, feel free to shoot a pr.
+  (let* ((text-posts (select-posts (+ 1 *text-display-count*) (* page *text-display-count*) :type "text" :board board))
+         (file-posts (select-posts (+ 1 *file-display-count*) (* page *file-display-count*) :type "file" :board board))
+         (text-posts-next-page-p (> (length text-posts) *text-display-count*))
+         (file-posts-next-page-p (> (length file-posts) *file-display-count*))
+         (stylized-text-posts (map 'list #'stylize-text-post (if text-posts-next-page-p
+                                                                 (without-last text-posts)
+                                                                 text-posts)))
+         (stylized-file-posts (map 'list #'stylize-file-post (if file-posts-next-page-p
+                                                                 (without-last file-posts)
+                                                                 file-posts))))
+    (if (or  (> (length text-posts) 0)
+             (> (length file-posts) 0))
+        (render-template* +mebious.html+ nil
+                          :text-posts stylized-text-posts
+                          :file-posts stylized-file-posts
+                          :active-board board
+                          :single-board-p (single-board-p)
+                          :user-prefs (parse-user-preferences)
+                          :board-names (unless (single-board-p)
+                                         (alist-keys *boards*))
+                          :board-data (cassoc board *boards* :test #'string=)
+                          :csrf-token (session-csrf-token)
+                          :next-page (when (or
+                                            file-posts-next-page-p
+                                            text-posts-next-page-p)
+                                       (+ page 1))
+                          :prev-page (when (> page 0)
+                                       (- page 1))
+                          :error error)
+        (render-404))))
 
 (defun render-404 ()
   (render-template* +404.html+ nil))
 
 (defun render-about-page ()
   (render-template* +about.html+ nil
+                    :api-requires-key *api-requires-key*
                     :boards *boards*
                     :accepted-mime-types *accepted-mime-types*
                     :max-file-size (write-to-string  *max-file-size*)
