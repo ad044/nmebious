@@ -46,7 +46,7 @@
          {% endfor %}
       </div>
       {% for file in file-posts %}
-      <img class="image" src="/uploads/{{ file.data }}" onerror="this.style.display='none'" style="{{ file.style }}"></img>
+      <img class="image" src="/uploads/{{ active-board }}/{{ file.data }}" onerror="this.style.display='none'" style="{{ file.style }}"></img>
       {% endfor %}
       {% if not single-board-p and user-prefs.boardlist == "on" %}
         <div class="boardlist">

@@ -148,5 +148,5 @@
                 (setf (session-value :flash-message) nil)
                 (get-request-validity-check :page page)
                 (setf (session-value :board) (caar *boards*))
-                (render-board (caar *boards*) :page page :error flash-message)))))
-        (redirect (format nil "/boards/~A" (caar *boards*)))))
+                (render-board (caar *boards*) :page page :error flash-message))))
+        (redirect (format nil "/boards/~A" (caar *boards*))))))

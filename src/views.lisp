@@ -113,7 +113,8 @@
                                                                  (without-last file-posts)
                                                                  file-posts))))
     (if (or  (> (length text-posts) 0)
-             (> (length file-posts) 0))
+             (> (length file-posts) 0)
+             (eql page 0))
         (render-template* +mebious.html+ nil
                           :text-posts stylized-text-posts
                           :file-posts stylized-file-posts

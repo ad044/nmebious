@@ -19,14 +19,14 @@
              (progn
                (unless (hunchentoot:started-p nmebious::*server*)
                  (nmebious::start-hunchentoot))
+
                (postmodern:connect-toplevel "test"
                                             nmebious::*db-user*
                                             nmebious::*db-pass*
-                                            "localhost")
+                                            nmebious::*db-host*)
                (setf nmebious::*boards* '(("first" . ((:background . nil) (:color . nil)))
                                           ("second" . ((:background . nil) (:color . nil)))))
                (setf nmebious::*api-requires-key* nil)
-               (nmebious::setup-db)
                (handler-bind ((dex:http-request-failed #'dex:ignore-and-continue))
                  (&body)))
           (progn

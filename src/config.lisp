@@ -38,11 +38,14 @@
 ;; Env file
 (defparameter *env* (read-env (asdf:system-relative-pathname 'nmebious ".env")))
 
+;; Postgres host
+(defparameter *db-host* (gethash "POSTGRES_HOST" *env*))
+
 ;; Postgres user
-(defparameter *db-user* (gethash "PGUSER" *env*))
+(defparameter *db-user* (gethash "POSTGRES_USER" *env*))
 
 ;; Postgres password
-(defparameter *db-pass* (gethash "PGPASSWORD" *env*))
+(defparameter *db-pass* (gethash "POSTGRES_PASSWORD" *env*))
 
 ;; HMAC secret
 (defparameter *secret* (gethash "SECRET" *env*))

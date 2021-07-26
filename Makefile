@@ -7,7 +7,7 @@ build:
 		--eval '(quit)'
 
 run:
-	sbcl --load nmebious.asd \
-	     --eval '(ql:quickload :nmebious)' \
-	     --eval '(in-package :nmebious)' \
-	     --eval '(start-server)'
+	$(LISP) --load nmebious.asd \
+	     	--eval '(ql:quickload :nmebious)' \
+	     	--eval '(in-package :nmebious)' \
+	     	--eval '(start-server)'

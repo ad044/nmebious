@@ -1,19 +1,5 @@
 (in-package #:nmebious)
 
-(defun setup-db ()
-  (query (:create-table (:if-not-exists 'post)
-                        ((id :type serial :primary-key t)
-                         (board :type string)
-                         (ip-hash :type string)
-                         (submission-date :type timestamp)
-                         (type :type string)
-                         (checksum :type string)
-                         (data :type string))))
-  (query (:create-table (:if-not-exists 'ban)
-                        ((ip-hash :type string))))
-  (query (:create-table (:if-not-exists 'api-key)
-                        ((key :type string)))))
-
 (defun insert-post (data checksum type board ip-hash)
   (query  (:insert-rows-into 'post
            :columns 'submission-date 'board 'type 'data 'ip-hash 'checksum

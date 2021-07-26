@@ -11,8 +11,7 @@
   (connect-toplevel "nmebious"
                     *db-user*
                     *db-pass*
-                    "localhost")
-  (setup-db))
+                    *db-host*))
 
 (define-static-resource "/static/" *static-dir*)
 (define-static-resource "/uploads/" *uploads-dir*)

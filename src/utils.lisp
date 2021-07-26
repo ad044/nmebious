@@ -35,7 +35,8 @@
         collect key))
 
 (defun color-for-board (board)
-  (cassoc :color (cassoc board *boards* :test #'string=)))
+  (or (cassoc :color (cassoc board *boards* :test #'string=))
+      "#00ff00"))
 
 (defun trim-whitespace (str)
   (string-trim '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout)
