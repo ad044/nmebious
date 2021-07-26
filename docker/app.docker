@@ -6,4 +6,4 @@ RUN apt-get install -y imagemagick rlwrap
 WORKDIR /nmebious
 COPY . .
 
-ENTRYPOINT ["rlwrap", "|", "make", "run"]
+ENTRYPOINT ["rlwrap", "make", "run"]
