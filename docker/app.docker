@@ -1,9 +1,0 @@
-FROM fukamachi/sbcl
-
-RUN apt-get update
-RUN apt-get install -y imagemagick rlwrap
-
-WORKDIR /nmebious
-COPY . .
-
-ENTRYPOINT ["rlwrap", "make", "run"]
