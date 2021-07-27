@@ -19,11 +19,11 @@
 (defparameter *boards* '(("main" . ((:background . "main.jpg") (:color . nil)))
                          ("second" . ((:background . nil) (:color . "#ffffff")))))
 
-;; Publicly served static files
-(defparameter *static-dir* (asdf:system-relative-pathname 'nmebious "static/"))
+;; Public files
+(defparameter *static-dir* (asdf:system-relative-pathname 'nmebious "public/"))
 
 ;; Where to store user uploaded content
-(defparameter *uploads-dir* (asdf:system-relative-pathname 'nmebious "uploads/"))
+(defparameter *uploads-dir* (asdf:system-relative-pathname 'nmebious "public/uploads/"))
 
 ;; URL for the website
 (defparameter *web-url* "https://example.website/")

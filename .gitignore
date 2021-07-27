@@ -1,4 +1,4 @@
 .env
 nmebious
-uploads/
-static/backgrounds/
+public/backgrounds/
+public/uploads/

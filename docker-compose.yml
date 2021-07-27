@@ -1,5 +1,19 @@
 version: "3"
-services: 
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    volumes:
+      - type: volume
+        source: public-content
+        target: /var/www/nmebious/static
+        volume:
+          nocopy: true
   db:
     build:
       context: .
@@ -20,6 +34,7 @@ services:
       - "4005:4005"
       - "8080:8080"
     volumes:
-      - type: bind
-        source: .
-        target: /nmebious
+      - public-content:/usr/src/app/public
+
+volumes:
+  public-content:
