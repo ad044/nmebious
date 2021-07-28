@@ -1,12 +1,11 @@
 #!/bin/bash
 
-ENV_FILE="../.env"
+if [[ -z "${DOCKER_RUNNING}" ]]; then
+    ENV_FILE="../.env"
+    USERNAME=$(grep POSTGRES_USER $ENV_FILE | cut -d '=' -f2)
+    PASSWORD=$(grep POSTGRES_PASSWORD $ENV_FILE | cut -d '=' -f2)
 
-if [[ -z "${POSTGRES_USER}" ]]; then
-   USERNAME=$(grep POSTGRES_USER $ENV_FILE | cut -d '=' -f2)
-   PASSWORD=$(grep POSTGRES_PASSWORD $ENV_FILE | cut -d '=' -f2)
-
-   psql -U postgres -c "CREATE ROLE $USERNAME WITH LOGIN SUPERUSER PASSWORD '$PASSWORD';"
+    psql -U postgres -c "CREATE ROLE $USERNAME WITH LOGIN SUPERUSER PASSWORD '$PASSWORD';"
 fi
 
 psql -U ${POSTGRES_USER:-postgres} << EOF

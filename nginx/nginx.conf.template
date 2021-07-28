@@ -3,6 +3,7 @@ upstream nmebious {
 }
 
 server {
+	client_max_body_size ${MAX_FILE_SIZE}M;
 	listen 80;
 
 	location / {
