@@ -20,7 +20,7 @@
                (unless (hunchentoot:started-p nmebious::*server*)
                  (nmebious::start-hunchentoot))
 
-               (postmodern:connect-toplevel "test"
+               (postmodern:connect-toplevel "nmebious-test"
                                             nmebious::*db-user*
                                             nmebious::*db-pass*
                                             nmebious::*db-host*)
@@ -30,13 +30,16 @@
                (handler-bind ((dex:http-request-failed #'dex:ignore-and-continue))
                  (&body)))
           (progn
-            (postmodern:query (:delete-from 'post))
-            (postmodern:query (:delete-from 'api-key))
-            (postmodern:disconnect-toplevel)
+            ;; reset everything back
             (setf nmebious::*allow-duplicates-after* allow-duplicates-default)
             (setf nmebious::*api-requires-key* api-requires-key-default)
             (setf nmebious::*accepted-mime-types* accepted-mime-types-default)
             (setf nmebious::*boards* boards-default)
+            ;; clean test database
+            (postmodern:query (:delete-from 'post))
+            (postmodern:query (:delete-from 'api-key))
+            ;; disconnect
+            (postmodern:disconnect-toplevel)
             (when (hunchentoot:started-p nmebious::*server*)
               (nmebious::stop-hunchentoot)))))))
 

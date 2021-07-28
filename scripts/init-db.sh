@@ -10,7 +10,7 @@ fi
 
 psql -U ${POSTGRES_USER:-postgres} << EOF
 CREATE DATABASE nmebious;
-CREATE DATABASE test;
+CREATE DATABASE "nmebious-test";
 
 \c nmebious
 CREATE TABLE post(
@@ -28,7 +28,7 @@ CREATE TABLE ban(
 CREATE TABLE api_key(
        key TEXT
 );
-\c test
+\c nmebious-test
 CREATE TABLE post(
        id SERIAL PRIMARY KEY,
        board VARCHAR(16),

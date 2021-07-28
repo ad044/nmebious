@@ -107,31 +107,33 @@
   (with-fail-handler (web-about :type 'web-view)
     (render-about-page)))
 
-;; Custom user-specific configuration for the front-end
-(defroute web-user-preferences ("/preferences"
+;; Get user preferences for front-end
+(defroute web-user-preferences ("/preferences" :method :get
                                 :decorators (@html @check-frontend-enabled)) ()
   (with-fail-handler (web-user-preferences :type 'web-view)
-    (case (request-method*)
-      (:get
-       (render-preferences-page))
-      (:post
-       (let* ((preferences (alist-keys *web-user-preferences*))
-              (post-params (post-parameters*))
-              (new-preferences (url-encode-params (reduce #'(lambda (acc pref)
-                                                              (acons (string-downcase pref)
-                                                                     (if  (cassoc pref post-params :test #'string=)
-                                                                          "on"
-                                                                          "off")
-                                                                     acc))
-                                                          preferences
-                                                          :initial-value '()))))
-         (set-cookie "mebious_user"
-                     :value new-preferences
-                     :max-age 315360000
-                     :path "/"
-                     :secure t
-                     :http-only t)
-         (redirect "/preferences"))))))
+    (render-preferences-page)))
+
+;; Set user preferences for front-end
+(defroute set-web-user-preferences ("/preferences" :method :post
+                                :decorators (@html @check-frontend-enabled)) ()
+  (with-fail-handler (set-web-user-preferences :type 'web-view)
+    (let* ((preferences (alist-keys *web-user-preferences*))
+           (post-params (post-parameters*))
+           (new-preferences (url-encode-params (reduce #'(lambda (acc pref)
+                                                           (acons (string-downcase pref)
+                                                                  (if  (cassoc pref post-params :test #'string=)
+                                                                       "on"
+                                                                       "off")
+                                                                  acc))
+                                                       preferences
+                                                       :initial-value '()))))
+      (set-cookie "mebious_user"
+                  :value new-preferences
+                  :max-age 315360000
+                  :path "/"
+                  :secure t
+                  :http-only t)
+      (redirect "/preferences"))))
 
 (defroute web-root ("/" :method :get
                         :decorators (@html @check-frontend-enabled))

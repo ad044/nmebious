@@ -96,10 +96,10 @@
   (encode-json-alist-to-string (pairlis '(message status)
                                         (list msg "Error"))))
 
-(defmacro redirect-back-to-board ()
-  `(if ,(single-board-p)
-       (redirect "/")
-       (redirect (format nil "/boards/~A" (session-value :board)))))
+(defun redirect-back-to-board ()
+  (if (single-board-p)
+      (redirect "/")
+      (redirect (format nil "/boards/~A" (session-value :board)))))
 
 (define-condition request-error (error)
   ((message :initarg :message :reader message)))

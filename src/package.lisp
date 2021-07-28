@@ -66,7 +66,8 @@
                           #:*dispatch-table*
                           #:set-cookie
                           #:cookie-in
-                          #:request-method*)
+                          #:request-method*
+                          #:define-easy-handler)
   (:shadowing-import-from #:easy-routes
                           #:defroute)
   (:shadowing-import-from #:djula
