@@ -2,17 +2,18 @@
 
 if [[ -z "${DOCKER_RUNNING}" ]]; then
     ENV_FILE="../.env"
-    USERNAME=$(grep POSTGRES_USER $ENV_FILE | cut -d '=' -f2)
-    PASSWORD=$(grep POSTGRES_PASSWORD $ENV_FILE | cut -d '=' -f2)
-
-    psql -U postgres -c "CREATE ROLE $USERNAME WITH LOGIN SUPERUSER PASSWORD '$PASSWORD';"
+    export POSTGRES_PASSWORD=$(grep POSTGRES_PASSWORD $ENV_FILE | cut -d '=' -f2)
 fi
 
-psql -U ${POSTGRES_USER:-postgres} << EOF
-CREATE DATABASE nmebious;
-CREATE DATABASE "nmebious-test";
+psql -U postgres <<EOF
+CREATE ROLE nmebious_admin WITH LOGIN PASSWORD '$POSTGRES_PASSWORD';
 
-\c nmebious
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO new_user;
+
+CREATE DATABASE nmebious OWNER nmebious_admin;
+CREATE DATABASE nmebious_test OWNER nmebious_admin;
+
+\c nmebious nmebious_admin
 CREATE TABLE post(
        id SERIAL PRIMARY KEY,
        board VARCHAR(16),
@@ -28,7 +29,7 @@ CREATE TABLE ban(
 CREATE TABLE api_key(
        key TEXT
 );
-\c nmebious-test
+\c nmebious_test nmebious_admin
 CREATE TABLE post(
        id SERIAL PRIMARY KEY,
        board VARCHAR(16),

@@ -39,13 +39,13 @@
 (defparameter *env* (read-env (asdf:system-relative-pathname 'nmebious ".env")))
 
 ;; Postgres host
-;; If ran by docker, the environment variable POSTGRES_HOST will be attached to the DB service.
+;; If ran by docker, the environment variable DB_HOST will be attached to the DB service.
 ;; If it's not attached, we're running locally, therefore the host is localhost.
-(defparameter *db-host* (or (sb-ext:posix-getenv "POSTGRES_HOST")
+(defparameter *db-host* (or (sb-ext:posix-getenv "DB_HOST")
                             "localhost"))
 
 ;; Postgres user
-(defparameter *db-user* (gethash "POSTGRES_USER" *env*))
+(defparameter *db-user* "nmebious_admin")
 
 ;; Postgres password
 (defparameter *db-pass* (gethash "POSTGRES_PASSWORD" *env*))
