@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="auth-form-container">
+    <form action="/admin/auth"  method="POST">
+      <input type="password" name="password">
+      <input type="hidden" name="csrf-token" value={{ csrf-token }}>
+      <br>
+       <button>login</button>
+    </form>
+</div>
+{% endblock %}

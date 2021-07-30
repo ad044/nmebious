@@ -41,6 +41,8 @@ services:
       - "8080:8080"
     volumes:
       - public-content:/usr/src/app/public
+    env_file:
+      - ./.env
     environment:
       - DB_HOST=db
 

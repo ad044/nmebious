@@ -1,6 +1,10 @@
 (in-package #:nmebious)
 
 ;; Random utils
+(defun parse-envvar (envvar)
+  (or (sb-ext:posix-getenv envvar)
+      (gethash envvar *env*)))
+
 (defun random-in-range (start end)
   (+ start (random (- end start))))
 
@@ -50,11 +54,11 @@
      0))
 
 (defun parse-user-preferences ()
-  (if (cookie-in "mebious_user")
-      (url-decode-params (cookie-in "mebious_user"))
+  (if (cookie-in "mebious-user")
+      (url-decode-params (cookie-in "mebious-user"))
       (progn
         (let* ((default-prefs (form-encoded-default-preferences)))
-          (set-cookie "mebious_user"
+          (set-cookie "mebious-user"
                       :value default-prefs
                       :max-age 315360000
                       :path "/"
@@ -71,18 +75,6 @@
                                         acc))
                              *web-user-preferences*
                              :initial-value '())))
-
-;; Crypto
-(defun hmac-sha256-bytes (secret text)
-  (let ((hmac (make-hmac (ascii-string-to-byte-array secret) :sha256)))
-    (update-hmac hmac (ascii-string-to-byte-array text))
-    (hmac-digest hmac)))
-
-(defun hmac-sha256 (secret text)
-  (hex (hmac-sha256-bytes secret text)))
-
-(defun hash-ip (ip)
-  (hmac-sha256 *secret* ip))
 
 (defun single-board-p ()
   (eql (length *boards*) 1))
@@ -174,6 +166,8 @@
                (progn
                  (setf (session-value :flash-message) e)
                  (redirect-back-to-board)))
+              (admin-auth
+               (redirect "/admin"))
               (web-view
                (render-404)))))
 

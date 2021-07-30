@@ -22,6 +22,11 @@
         (redirect-back-to-board))
       (funcall next)))
 
+(defun @is-admin (next)
+  (if (session-value :is-admin)
+      (funcall next)
+      (redirect "/admin")))
+
 (defun @html (next)
   (setf (content-type*) "text/html")
   (funcall next))

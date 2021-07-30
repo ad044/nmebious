@@ -36,7 +36,10 @@
 (defparameter *allow-duplicates-after* 5)
 
 ;; Env file
-(defparameter *env* (read-env (asdf:system-relative-pathname 'nmebious ".env")))
+;; (Inside a docker container it won't exist since all env vars will be located inside memory, so we check for that.)
+(defparameter *env* (let* ((dotenv-path (asdf:system-relative-pathname 'nmebious ".env")))
+                      (when (probe-file dotenv-path)
+                          (read-env dotenv-path))))
 
 ;; Postgres host
 ;; If ran by docker, the environment variable DB_HOST will be attached to the DB service.
@@ -48,14 +51,16 @@
 (defparameter *db-user* "nmebious_admin")
 
 ;; Postgres password
-(defparameter *db-pass* (gethash "POSTGRES_PASSWORD" *env*))
+(defparameter *db-pass* (parse-envvar "POSTGRES_PASSWORD"))
 
 ;; HMAC secret
-(defparameter *secret* (gethash "SECRET" *env*))
+(defparameter *hmac-secret* (parse-envvar "HMAC_SECRET"))
+
+;; Admin panel password
+(defparameter *admin-pass* (hash-admin-pass (parse-envvar "ADMIN_PASSWORD")))
 
 ;; Maximum file size (in mbs)
-(defparameter *max-file-size* (parse-integer (gethash "MAX_FILE_SIZE" *env*)))
-
+(defparameter *max-file-size* (parse-integer (parse-envvar "MAX_FILE_SIZE")))
 
 ;; ==================       Configuration for the default frontend (if enabled)        ======================
 

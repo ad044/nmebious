@@ -199,3 +199,24 @@ body, input {
   color: #ff0000 !important;
   border-color: #ff0000 !important;
 }
+
+.auth-form-container {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
+
+.auth-form-container input {
+  font-size: 50px;
+}
+
+.auth-form-container button {
+  background: black;
+  font-size: 25px;
+  padding: 2px;
+  display: block;
+  margin: 0 auto;
+}

@@ -44,7 +44,9 @@
                           #:update-hmac
                           #:make-hmac
                           #:byte-array-to-hex-string
-                          #:random-data)
+                          #:random-data
+                          #:make-kdf
+                          #:derive-key)
   (:shadowing-import-from #:hunchentoot
                           #:start
                           #:stop
@@ -67,7 +69,9 @@
                           #:set-cookie
                           #:cookie-in
                           #:request-method*
-                          #:define-easy-handler)
+                          #:define-easy-handler
+                          #:regenerate-session-cookie-value
+                          #:delete-session-value)
   (:shadowing-import-from #:easy-routes
                           #:defroute)
   (:shadowing-import-from #:djula

@@ -30,6 +30,7 @@
                 :components
                 ((:file "package")
                  (:file "utils")
+                 (:file "crypto")
                  (:file "config")
                  (:file "db")
                  (:file "nmebious")

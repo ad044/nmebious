@@ -6,6 +6,8 @@
 (defparameter +404.html+ (compile-template* "404.html"))
 (defparameter +about.html+ (compile-template* "about.html"))
 (defparameter +preferences.html+ (compile-template* "preferences.html"))
+(defparameter +auth.html+ (compile-template* "auth.html"))
+(defparameter +admin.html+ (compile-template* "admin.html"))
 
 ;; Text stuff
 (defun get-font ()
@@ -157,3 +159,10 @@
                             *web-user-preferences*)))
     (render-template* +preferences.html+ nil
                       :preferences render-prefs)))
+
+(defun render-admin-auth-page ()
+  (render-template* +auth.html+ nil
+                    :csrf-token (session-csrf-token)))
+
+(defun render-admin-panel ()
+  (render-template* +admin.html+ nil))

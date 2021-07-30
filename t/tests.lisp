@@ -20,7 +20,7 @@
                (unless (hunchentoot:started-p nmebious::*server*)
                  (nmebious::start-hunchentoot))
 
-               (postmodern:connect-toplevel "nmebious-test"
+               (postmodern:connect-toplevel "nmebious_test"
                                             nmebious::*db-user*
                                             nmebious::*db-pass*
                                             nmebious::*db-host*)

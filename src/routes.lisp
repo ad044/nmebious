@@ -127,7 +127,7 @@
                                                                   acc))
                                                        preferences
                                                        :initial-value '()))))
-      (set-cookie "mebious_user"
+      (set-cookie "mebious-user"
                   :value new-preferences
                   :max-age 315360000
                   :path "/"
@@ -137,7 +137,7 @@
 
 (defroute web-root ("/" :method :get
                         :decorators (@html @check-frontend-enabled))
-    ((page :init-form 0 :parameter-type 'integer))
+  ((page :init-form 0 :parameter-type 'integer))
   (with-fail-handler (web-root :type 'web-view)
     (if (single-board-p)
         (if (and (not *pagination-on-default-frontend-enabled-p*)
@@ -152,3 +152,32 @@
                 (setf (session-value :board) (caar *boards*))
                 (render-board (caar *boards*) :page page :error flash-message))))
         (redirect (format nil "/boards/~A" (caar *boards*))))))
+
+
+;; Admin page
+;; If authenticated, it renders the panel
+;; else it renders the authentication page
+(defroute admin-page ("/admin" :method :get
+                               :decorators (@html @check-frontend-enabled)) ()
+  (with-fail-handler (admin-page :type 'web-view)
+    (if (session-value :is-admin)
+        (render-admin-panel)
+        (render-admin-auth-page))))
+
+;; POST for admin authentication
+(defroute admin-auth ("/admin/auth" :method :post
+                        :decorators (@html @check-frontend-enabled)) ()
+  (with-fail-handler (admin-auth :type 'admin-auth)
+    (let* ((post-params (post-parameters*))
+           (pass (cassoc "password" post-params :test #'string=)))
+      (when (string= (hash-admin-pass pass) *admin-pass*)
+        (regenerate-session-cookie-value *session*)
+        (setf (session-value :is-admin) t))
+      (redirect "/admin"))))
+
+;; POST for admin logout
+(defroute admin-logout ("/admin/logout" :method :post
+                                        :decorators (@html @check-frontend-enabled @is-admin)) ()
+  (with-fail-handler (admin-logout :type 'admin-auth)
+    (delete-session-value :is-admin)
+    (redirect "/admin")))
