@@ -25,7 +25,8 @@
                #:easy-routes+djula
                #:dexador
                #:quri
-               #:hunchentools)
+               #:hunchentools
+               #:trivial-file-size)
   :components ((:module "src"
                 :components
                 ((:file "package")

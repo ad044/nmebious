@@ -85,6 +85,8 @@
                           #:session-csrf-token
                           #:require-session-csrf-token
                           #:harden-session-cookie)
+  (:shadowing-import-from #:trivial-file-size
+                          #:file-size-in-octets)
   (:export #:start-server
            #:stop-server
            #:*port*))

@@ -120,21 +120,24 @@
 
 (defmacro after-submit-file (&body body)
   `(bind ((post-params (post-parameters*))
-          ((src filename content-type) (or (cassoc "file"
-                                                   post-params
-                                                   :test #'string=)
-                                           (throw-request-error "No file data found." :code 400)))
-          (board (or (cassoc "board"
-                             post-params
-                             :test #'string=)
-                     (session-value :board)
-                     (throw-request-error "No board data found." :code 400)))
-          (ip-hash (hash-ip (real-remote-addr)))
-          (checksum (hex (md5sum-file src))))
+           ((src filename content-type) (or (cassoc "file"
+                                                    post-params
+                                                    :test #'string=)
+                                            (throw-request-error "No file data found." :code 400)))
+           (board (or (cassoc "board"
+                              post-params
+                              :test #'string=)
+                      (session-value :board)
+                      (throw-request-error "No board data found." :code 400)))
+           (size-in-mb (/ (file-size-in-octets src)
+                          1000000))
+           (ip-hash (hash-ip (real-remote-addr)))
+           (checksum (hex (md5sum-file src))))
      (file-post-validity-check :content-type content-type
                                :checksum checksum
                                :board board
-                               :ip-hash ip-hash)
+                               :ip-hash ip-hash
+                               :file-size size-in-mb)
      (let* ((filename (gen-filename))
             (type (mime-file-type content-type))
             (full-filename (concatenate 'string filename "." type))
@@ -224,7 +227,7 @@
         ((banned-p ip-hash)
          (throw-request-error "You are banned." :code 403))))
 
-(defun file-post-validity-check (&key content-type checksum board ip-hash)
+(defun file-post-validity-check (&key content-type checksum board ip-hash file-size)
   (cond ((not (mime-type-accepted-p content-type))
          (throw-request-error (format nil "Content type not accepted: ~A." content-type) :code 422))
         ((not (board-exists-p board))
@@ -233,7 +236,9 @@
               (post-duplicate-p checksum ip-hash *allow-duplicates-after* board))
          (throw-request-error "Duplicate post." :code 422))
         ((banned-p ip-hash)
-         (throw-request-error "You are banned." :code 403))))
+         (throw-request-error "You are banned." :code 403))
+        ((> file-size *max-file-size*)
+         (throw-request-error (format nil "Submitted files can't be bigger than ~A MB." *max-file-size*) :code 413))))
 
 (defun parse-board (board)
   (let* ((trimmed-board (trim-whitespace board)))
