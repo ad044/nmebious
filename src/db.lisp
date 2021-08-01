@@ -37,7 +37,7 @@
 
 (defun exists-p (val table col)
   (query (:select '*
-          :from table
+           :from table
            :where (:= col val))))
 
 (defun api-key-valid-p (api-key)
@@ -55,3 +55,19 @@
 
 (defun add-api-key (api-key)
   (query (:insert-into 'api-key :set 'key api-key)))
+
+(defun admin-lookup (username)
+  (query (:select '*
+           :from 'admin
+           :where (:= username 'username))
+         :alists))
+
+(defun register-admin-user (user pass)
+  (let* ((salt (random-data 32))
+         (pass-hash (hash-pass pass salt)))
+    (unless (exists-p user 'admin 'username)
+      (query  (:insert-rows-into 'admin
+               :columns 'username 'password 'salt
+               :values `((,user
+                          ,pass-hash
+                          ,(hex salt))))))))

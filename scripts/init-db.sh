@@ -24,10 +24,18 @@ CREATE TABLE post(
        data TEXT
 );
 CREATE TABLE ban(
+       id SERIAL PRIMARY KEY,
        ip_hash CHAR(64)
 );
 CREATE TABLE api_key(
+       id SERIAL PRIMARY KEY,
        key TEXT
+);
+CREATE TABLE admin(
+       id SERIAL PRIMARY KEY,
+       username TEXT,
+       password TEXT,
+       salt TEXT
 );
 \c nmebious_test nmebious_admin
 CREATE TABLE post(
@@ -40,9 +48,11 @@ CREATE TABLE post(
        data TEXT
 );
 CREATE TABLE ban(
+       id SERIAL PRIMARY KEY,
        ip_hash CHAR(64)
 );
 CREATE TABLE api_key(
+       id SERIAL PRIMARY KEY,
        key TEXT
 );
 EOF

@@ -47,17 +47,8 @@
 (defparameter *db-host* (or (sb-ext:posix-getenv "DB_HOST")
                             "localhost"))
 
-;; Postgres user
-(defparameter *db-user* "nmebious_admin")
-
 ;; Postgres password
 (defparameter *db-pass* (parse-envvar "POSTGRES_PASSWORD"))
-
-;; HMAC secret
-(defparameter *hmac-secret* (parse-envvar "HMAC_SECRET"))
-
-;; Admin panel password
-(defparameter *admin-pass* (hash-admin-pass (parse-envvar "ADMIN_PASSWORD")))
 
 ;; Maximum file size (in mbs)
 (defparameter *max-file-size* (parse-integer (parse-envvar "MAX_FILE_SIZE")))

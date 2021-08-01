@@ -6,7 +6,8 @@
   {% endif %}
 
 <div class="auth-form-container">
-    <form action="/admin/auth"  method="POST">
+  <form action="/admin/auth"  method="POST">
+      <input type="text" name="username">
       <input type="password" name="password">
       <input type="hidden" name="csrf-token" value={{ csrf-token }}>
       <br>

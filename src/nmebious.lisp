@@ -9,9 +9,11 @@
 (defun start-db ()
   (set-local-time-cl-postgres-readers)
   (connect-toplevel "nmebious"
-                    *db-user*
+                    "nmebious_admin"
                     *db-pass*
-                    *db-host*))
+                    *db-host*)
+  (register-admin-user (parse-envvar "ADMIN_USERNAME")
+                       (parse-envvar "ADMIN_PASSWORD")))
 
 (define-static-resource "/static/" *static-dir*)
 (define-static-resource "/uploads/" *uploads-dir*)

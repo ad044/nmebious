@@ -79,6 +79,19 @@
 (defun single-board-p ()
   (eql (length *boards*) 1))
 
+;; Crypto utils
+(defparameter *argon2-kdf* (make-kdf :argon2d :block-count 15000))
+
+(defun hash-ip (ip)
+  (hex (md5sum-string ip)))
+
+(defun hash-pass (pass salt)
+  (hex (derive-key *argon2-kdf*
+                   (ascii-string-to-byte-array pass)
+                   salt
+                   2
+                   32)))
+
 ;; Request handling
 (defun api-success ()
   (encode-json-alist-to-string (pairlis '(status) '("Success"))))
@@ -189,9 +202,13 @@
      (setf (session-value :flash-message) nil)
      (progn ,@body)))
 
-(defun admin-auth-validity-check (&key pass)
-  (cond ((not (string= (hash-admin-pass pass) *admin-pass*))
-         (throw-request-error "Invalid credentials." :code 401))))
+(defun admin-auth-validity-check (username pass)
+  (let* ((lookup (car (admin-lookup username))))
+    (cond ((or (not (cassoc :username lookup))
+               (not (string= (hash-pass pass
+                                        (hex-string-to-byte-array (cassoc :salt lookup)))
+                             (cassoc :password lookup))))
+           (throw-request-error "Invalid credentials." :code 401)))))
 
 (defun get-request-validity-check (&key count type board page offset)
   (cond ((and offset

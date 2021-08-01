@@ -211,6 +211,8 @@ body, input {
 
 .auth-form-container input {
   font-size: 50px;
+  display: block;
+  margin: 0 auto;
 }
 
 .auth-form-container button {

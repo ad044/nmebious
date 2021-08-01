@@ -12,36 +12,38 @@
          (allow-duplicates-default nmebious::*allow-duplicates-after*)
          (api-requires-key-default nmebious::*api-requires-key*)
          (accepted-mime-types-default nmebious::*accepted-mime-types*)
-         (boards-default nmebious::*boards*))
-    (if (hunchentoot:started-p nmebious::*server*)
-        (format t "The application can't be running while testing. Stop the server and retry.")
-        (unwind-protect
+         (boards-default nmebious::*boards*)
+         (file-size-default nmebious::*max-file-size*))
+    (unwind-protect
+         (if (hunchentoot:started-p nmebious::*server*)
+             (format t "The application can't be running while testing. Stop the server and retry.")
              (progn
                (unless (hunchentoot:started-p nmebious::*server*)
                  (nmebious::start-hunchentoot))
 
                (postmodern:connect-toplevel "nmebious_test"
-                                            nmebious::*db-user*
+                                            "nmebious_admin"
                                             nmebious::*db-pass*
                                             nmebious::*db-host*)
                (setf nmebious::*boards* '(("first" . ((:background . nil) (:color . nil)))
                                           ("second" . ((:background . nil) (:color . nil)))))
                (setf nmebious::*api-requires-key* nil)
                (handler-bind ((dex:http-request-failed #'dex:ignore-and-continue))
-                 (&body)))
-          (progn
-            ;; reset everything back
-            (setf nmebious::*allow-duplicates-after* allow-duplicates-default)
-            (setf nmebious::*api-requires-key* api-requires-key-default)
-            (setf nmebious::*accepted-mime-types* accepted-mime-types-default)
-            (setf nmebious::*boards* boards-default)
-            ;; clean test database
-            (postmodern:query (:delete-from 'post))
-            (postmodern:query (:delete-from 'api-key))
-            ;; disconnect
-            (postmodern:disconnect-toplevel)
-            (when (hunchentoot:started-p nmebious::*server*)
-              (nmebious::stop-hunchentoot)))))))
+                 (&body))))
+      (progn
+        ;; reset everything back
+        (setf nmebious::*allow-duplicates-after* allow-duplicates-default)
+        (setf nmebious::*api-requires-key* api-requires-key-default)
+        (setf nmebious::*accepted-mime-types* accepted-mime-types-default)
+        (setf nmebious::*boards* boards-default)
+        (setf nmebious::*max-file-size* file-size-default)
+        ;; clean test database
+        (postmodern:query (:delete-from 'post))
+        (postmodern:query (:delete-from 'api-key))
+        ;; disconnect
+        (postmodern:disconnect-toplevel)
+        (when (hunchentoot:started-p nmebious::*server*)
+          (nmebious::stop-hunchentoot))))))
 
 (defun test-file (filename)
   (asdf:system-relative-pathname 'nmebious (format nil "t/~A" filename)))
@@ -154,6 +156,7 @@
   (with-fixture test-env ()
     (postmodern:query (:delete-from 'post))
 
+    (setf nmebious::*allow-duplicates-after* nil)
     (setf nmebious::*accepted-mime-types* '("image/jpeg"))
 
     ;; jpg image (supported format)
@@ -171,6 +174,14 @@
                                     (list (test-file "test.jpg") test-board)))
       (declare (ignore headers uri))
       (expect-error-with-message "No file data found." 400))
+
+    (setf nmebious::*max-file-size* 0)
+
+    ;; file size limit check
+    (with-submit-file ("test.jpg" test-board)
+      (expect-error-with-message "Submitted files can't be bigger than 0 MB." 413))
+
+    (setf nmebious::*max-file-size* 2)
 
     (setf nmebious::*api-requires-key* t)
 

@@ -44,6 +44,7 @@
                           #:update-hmac
                           #:make-hmac
                           #:byte-array-to-hex-string
+                          #:hex-string-to-byte-array
                           #:random-data
                           #:make-kdf
                           #:derive-key)
