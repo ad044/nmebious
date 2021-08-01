@@ -138,7 +138,7 @@ body, input {
   margin-top: 5px;
 }
 
-.not-found-header {
+.error-page-header {
   font-size: 3em;
   position: absolute;
   top: 45%;

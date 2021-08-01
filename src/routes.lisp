@@ -2,13 +2,13 @@
 
 ;; POST text via API
 (defroute api-submit-text ("/api/submit/text" :method :post
-                                              :decorators (@json @check-banned @check-api-key)) ()
+                                              :decorators (@json @check-api-key)) ()
   (with-fail-handler (api-submit-text :type 'api)
     (after-submit-text (api-success))))
 
 ;; POST file via API
 (defroute api-submit-file ("/api/submit/file" :method :post
-                                              :decorators (@json @check-banned @check-api-key)) ()
+                                              :decorators (@json @check-api-key)) ()
   (with-fail-handler (api-submit-file :type 'api)
     (after-submit-file (api-success))))
 
@@ -46,7 +46,7 @@
     (let* ((board (parse-board board)))
       (if (and board
                (single-board-p))
-          (render-404)
+          (render-error-page "This instance only has a single board." 404)
           (progn
             (get-request-validity-check :board board :page page)
             (let* ((posts (select-posts 30 (* page 30) :board board))
@@ -69,7 +69,7 @@
 
 ;; POST file via the default frontend
 (defroute web-submit-file ("/web-view/submit/file" :method :post
-                                                   :decorators (@html @check-banned @check-frontend-enabled)) ()
+                                                   :decorators (@html @check-frontend-enabled)) ()
   (with-fail-handler (web-submit-file :type 'web-view-submission)
     (require-session-csrf-token :post)
     (after-submit-file
@@ -77,7 +77,7 @@
 
 ;; POST text via the default frontend
 (defroute web-submit-text ("/web-view/submit/text" :method :post
-                                                   :decorators (@html @check-banned @check-frontend-enabled)) ()
+                                                   :decorators (@html @check-frontend-enabled)) ()
   (with-fail-handler (web-submit-text :type 'web-view-submission)
     (require-session-csrf-token :post)
     (after-submit-text
@@ -91,12 +91,11 @@
     (if (or (single-board-p)
             (and (not *pagination-on-default-frontend-enabled-p*)
                  (> page 0)))
-        (render-404)
+        (render-error-page "This instance has pagination disabled." 403)
         (progn
           (start-session)
           (harden-session-cookie)
-          (let* ((flash-message (session-value :flash-message)))
-            (setf (session-value :flash-message) nil)
+          (with-flash-message
             (get-request-validity-check :board board :page page)
             (setf (session-value :board) board)
             (render-board board :page page :error flash-message))))))
@@ -142,42 +141,50 @@
     (if (single-board-p)
         (if (and (not *pagination-on-default-frontend-enabled-p*)
                  (> page 0))
-            (render-404)
+            (render-error-page "This instance has pagination disabled." 403)
             (progn
               (start-session)
               (harden-session-cookie)
-              (let* ((flash-message (session-value :flash-message)))
-                (setf (session-value :flash-message) nil)
+              (with-flash-message
                 (get-request-validity-check :page page)
                 (setf (session-value :board) (caar *boards*))
                 (render-board (caar *boards*) :page page :error flash-message))))
         (redirect (format nil "/boards/~A" (caar *boards*))))))
 
 
-;; Admin page
-;; If authenticated, it renders the panel
-;; else it renders the authentication page
-(defroute admin-page ("/admin" :method :get
-                               :decorators (@html @check-frontend-enabled)) ()
+;; Admin auth page
+(defroute admin-page ("/admin/auth" :method :get
+                                    :decorators (@html)) ()
   (with-fail-handler (admin-page :type 'web-view)
+    (start-session)
+    (harden-session-cookie)
     (if (session-value :is-admin)
-        (render-admin-panel)
-        (render-admin-auth-page))))
+        (redirect "/admin/panel")
+        (with-flash-message
+          (render-admin-auth-page :error flash-message)))))
 
 ;; POST for admin authentication
 (defroute admin-auth ("/admin/auth" :method :post
-                        :decorators (@html @check-frontend-enabled)) ()
+                        :decorators (@html)) ()
   (with-fail-handler (admin-auth :type 'admin-auth)
     (let* ((post-params (post-parameters*))
-           (pass (cassoc "password" post-params :test #'string=)))
-      (when (string= (hash-admin-pass pass) *admin-pass*)
-        (regenerate-session-cookie-value *session*)
-        (setf (session-value :is-admin) t))
-      (redirect "/admin"))))
+           (pass (or (cassoc "password" post-params :test #'string=)
+                     (throw-request-error "Missing password in request body." :code 400))))
+      (admin-auth-validity-check :pass pass)
+      (regenerate-session-cookie-value *session*)
+      (setf (session-value :is-admin) t)
+      (redirect "/admin/panel"))))
 
 ;; POST for admin logout
 (defroute admin-logout ("/admin/logout" :method :post
-                                        :decorators (@html @check-frontend-enabled @is-admin)) ()
+                                        :decorators (@html @is-admin)) ()
   (with-fail-handler (admin-logout :type 'admin-auth)
+    (require-session-csrf-token :post)
     (delete-session-value :is-admin)
-    (redirect "/admin")))
+    (redirect "/admin/auth")))
+
+;; Admin panel
+(defroute admin-panel ("/admin/panel" :method :get
+                                      :decorators (@html @is-admin)) ()
+  (with-fail-handler (admin-panel)
+    (render-admin-panel)))

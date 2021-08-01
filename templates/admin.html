@@ -4,6 +4,7 @@
 placeholder
 
 <form action="/admin/logout" method="POST">
+  <input type="hidden" name="csrf-token" value={{ csrf-token }}>
   <button>logout</button>
 </form>
 {% endblock %}

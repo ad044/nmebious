@@ -58,11 +58,11 @@
                     "Success"))
   `(is (eql code 200)))
 
-(defmacro expect-error-with-message (message)
+(defmacro expect-error-with-message (message expected-code)
   `(let* ((json-body (cl-json:decode-json-from-string body))
           (status (nmebious::cassoc :status json-body))
           (message (nmebious::cassoc :message json-body)))
-     (is (eql code 400))
+     (is (eql code ,expected-code))
      (is (string= "Error" status))
      (is (string= message ,message))))
 
@@ -100,16 +100,16 @@
 
     ;; incorrect/nonexistant board
     (with-submit-text ("testphrase" "doesntexist")
-      (expect-error-with-message "Board does not exist."))
+      (expect-error-with-message "Board does not exist." 422))
 
     ;; duplicate checking works
     (setf nmebious::*allow-duplicates-after* 5)
     (with-submit-text ("firsttest" test-board)
-      (expect-error-with-message "Duplicate post."))
+      (expect-error-with-message "Duplicate post." 422))
 
     ;; text too long
     (with-submit-text ((make-string 256 :initial-element #\a) test-board)
-      (expect-error-with-message "Text too long."))
+      (expect-error-with-message "Text too long." 413))
 
     ;; incorrectly named key for text
     (multiple-value-bind (body code headers uri)
@@ -117,7 +117,7 @@
                        :content (format nil "board=~A&incorrect=~A" test-board "test")
                        :headers '((:content-type . "application/x-www-form-urlencoded")))
       (declare (ignore headers uri))
-      (expect-error-with-message "No text data found in body."))
+      (expect-error-with-message "No text data found in body." 400))
 
     ;; incorrectly named key for board
     (multiple-value-bind (body code headers uri)
@@ -125,12 +125,12 @@
                        :content (format nil "incorrect=~A&text=~A" test-board "test")
                        :headers '((:content-type . "application/x-www-form-urlencoded")))
       (declare (ignore headers uri))
-      (expect-error-with-message "No board data found."))
+      (expect-error-with-message "No board data found." 400))
 
     ;; api key check without providing a key
     (setf nmebious::*api-requires-key* t)
     (with-submit-text ("keytest" test-board)
-      (expect-error-with-message "Must provide an API key."))
+      (expect-error-with-message "Must provide an API key." 400))
 
     ;; with valid key
     (nmebious::add-api-key "test-key")
@@ -147,7 +147,7 @@
                        :content (format nil "board=~A&text=~A&api-key=bad-key" test-board "test")
                        :headers '((:content-type . "application/x-www-form-urlencoded")))
       (declare (ignore headers uri))
-      (expect-error-with-message "Invalid API key."))))
+      (expect-error-with-message "Invalid API key." 401))))
 
 
 (test submit-file
@@ -162,7 +162,7 @@
 
     ;; unsupported format
     (with-submit-file ("test.tiff" test-board)
-      (expect-error-with-message "Content type not accepted: image/tiff." ))
+      (expect-error-with-message "Content type not accepted: image/tiff." 422))
 
     ;; incorrectly named key
     (multiple-value-bind (body code headers uri)
@@ -170,13 +170,13 @@
                   :content (pairlis '("test" "board")
                                     (list (test-file "test.jpg") test-board)))
       (declare (ignore headers uri))
-      (expect-error-with-message "No file data found."))
+      (expect-error-with-message "No file data found." 400))
 
     (setf nmebious::*api-requires-key* t)
 
     ;; without api key
     (with-submit-file ("test.jpg" test-board)
-      (expect-error-with-message "Must provide an API key."))
+      (expect-error-with-message "Must provide an API key." 400))
 
     ;; with valid key
     (nmebious::add-api-key "test-key")
@@ -194,7 +194,7 @@
                   :content (pairlis '("test" "board" "api-key")
                                     (list (test-file "test.jpg") test-board "bad-key")))
       (declare (ignore headers uri))
-      (expect-error-with-message "Invalid API key."))))
+      (expect-error-with-message "Invalid API key." 401))))
 
 (test get-posts
   (with-fixture test-env ()
@@ -255,7 +255,7 @@
                                                                       nmebious::*post-get-limit*)))))
       (let* ((json-body (cl-json:decode-json-from-string body))
              (message (nmebious::cassoc :message json-body)))
-        (is (eql 400
+        (is (eql 422
                  code))
         (is (string= message "Tried to retrieve too many posts."))))
 
@@ -265,7 +265,7 @@
                                                   "?type=text&offset=-1")))
       (let* ((json-body (cl-json:decode-json-from-string body))
              (message (nmebious::cassoc :message json-body)))
-        (is (eql 400
+        (is (eql 422
                  code))
         (is (string= message "Offset must be a positive number."))))
 
@@ -275,7 +275,7 @@
                                                   "?type=text&count=-1")))
       (let* ((json-body (cl-json:decode-json-from-string body))
              (message (nmebious::cassoc :message json-body)))
-        (is (eql 400
+        (is (eql 422
                  code))
         (is (string= message "Count must be a positive number."))))
 
@@ -284,7 +284,7 @@
         (dex:get (localhost "api" "posts" "thisboarddoesnotexist"))
       (let* ((json-body (cl-json:decode-json-from-string body))
              (message (nmebious::cassoc :message json-body)))
-        (is (eql 400
+        (is (eql 404
                  code))
         (is (string= message "Board does not exist."))))
 
@@ -293,7 +293,7 @@
         (dex:get (localhost "api" "posts" "?type=incorrect"))
       (let* ((json-body (cl-json:decode-json-from-string body))
              (message (nmebious::cassoc :message json-body)))
-        (is (eql 400
+        (is (eql 422
                  code))
         (is (string= message "Incorrect type."))))
 

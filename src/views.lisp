@@ -3,7 +3,7 @@
 (add-template-directory (asdf:system-relative-pathname 'nmebious "templates/"))
 
 (defparameter +mebious.html+ (compile-template* "mebious.html"))
-(defparameter +404.html+ (compile-template* "404.html"))
+(defparameter +error.html+ (compile-template* "error.html"))
 (defparameter +about.html+ (compile-template* "about.html"))
 (defparameter +preferences.html+ (compile-template* "preferences.html"))
 (defparameter +auth.html+ (compile-template* "auth.html"))
@@ -134,10 +134,12 @@
                           :prev-page (when (> page 0)
                                        (- page 1))
                           :error error)
-        (render-404))))
+        (render-error-page "This page does not exist." 404))))
 
-(defun render-404 ()
-  (render-template* +404.html+ nil))
+(defun render-error-page (msg code)
+  (setf (return-code*) code)
+  (render-template* +error.html+ nil
+                    :error msg))
 
 (defun render-about-page ()
   (render-template* +about.html+ nil
@@ -160,9 +162,11 @@
     (render-template* +preferences.html+ nil
                       :preferences render-prefs)))
 
-(defun render-admin-auth-page ()
+(defun render-admin-auth-page (&key error)
   (render-template* +auth.html+ nil
-                    :csrf-token (session-csrf-token)))
+                    :csrf-token (session-csrf-token)
+                    :error error))
 
 (defun render-admin-panel ()
-  (render-template* +admin.html+ nil))
+  (render-template* +admin.html+ nil
+                    :csrf-token (session-csrf-token)))

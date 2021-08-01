@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 
 {% block body %}
+  {% if error %}
+    <span class="flash">{{ error }}</span>
+  {% endif %}
+
 <div class="auth-form-container">
     <form action="/admin/auth"  method="POST">
       <input type="password" name="password">

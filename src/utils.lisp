@@ -83,8 +83,8 @@
 (defun api-success ()
   (encode-json-alist-to-string (pairlis '(status) '("Success"))))
 
-(defun api-fail-with-message (msg)
-  (setf (return-code*) +http-bad-request+)
+(defun api-fail-with-message (msg code)
+  (setf (return-code*) code)
   (encode-json-alist-to-string (pairlis '(message status)
                                         (list msg "Error"))))
 
@@ -101,9 +101,9 @@
           (ip-hash (hash-ip  (real-remote-addr)))
           (board (or (cassoc "board" post-params :test #'string=)
                      (session-value :board)
-                     (throw-request-error "No board data found.")))
+                     (throw-request-error "No board data found." :code 400)))
           (submitted-text (or (cassoc "text" post-params :test #'string=)
-                              (throw-request-error "No text data found in body.")))
+                              (throw-request-error "No text data found in body." :code 400)))
           (formatted-text (trim-whitespace (format nil "~A" submitted-text)))
           (checksum (hex (md5sum-string formatted-text))))
      (text-post-validity-check :text-data formatted-text
@@ -123,12 +123,12 @@
           ((src filename content-type) (or (cassoc "file"
                                                    post-params
                                                    :test #'string=)
-                                           (throw-request-error "No file data found.")))
+                                           (throw-request-error "No file data found." :code 400)))
           (board (or (cassoc "board"
                              post-params
                              :test #'string=)
                      (session-value :board)
-                     (throw-request-error "No board data found.")))
+                     (throw-request-error "No board data found." :code 400)))
           (ip-hash (hash-ip (real-remote-addr)))
           (checksum (hex (md5sum-file src))))
      (file-post-validity-check :content-type content-type
@@ -150,76 +150,90 @@
                       :board board))
          ,@body))))
 
-(defmacro throw-request-error (msg)
-  `(error 'request-error :message ,msg))
+(defun throw-request-error (msg &key code)
+  (error 'request-error :message (pairlis '(:error-message :code)
+                                          `(,msg ,code))))
 
 (defmacro with-fail-handler ((name &key type) &body body)
   `(labels
-       ((send-error (e)
-          (setf (return-code*) +http-bad-request+)
+       ((send-error (e code)
           (format *error-output* "Error: ~A~%" e)
           (return-from ,name
             (case ,type
               (api
-               (api-fail-with-message e))
+               (api-fail-with-message e code))
+              (web-view
+               (render-error-page e code))
               (web-view-submission
                (progn
                  (setf (session-value :flash-message) e)
                  (redirect-back-to-board)))
               (admin-auth
-               (redirect "/admin"))
-              (web-view
-               (render-404)))))
-
+               (progn
+                 (setf (session-value :flash-message) e)
+                 (redirect "/admin/auth"))))))
         (fail (e)
-          (format *error-output* "Error: ~A~%" e)
-          (send-error "Bad request."))
+          (send-error "Bad request." 400))
         (catch-error (e)
-          (send-error (message e))))
+          (let* ((message (message e)))
+            (send-error (cassoc :error-message message) (cassoc :code message)))))
      (handler-bind ((request-error #'catch-error)
                     (error #'fail))
        ,@body)))
 
+(defmacro with-flash-message (&body body)
+  `(let* ((flash-message (session-value :flash-message)))
+     (setf (session-value :flash-message) nil)
+     (progn ,@body)))
+
+(defun admin-auth-validity-check (&key pass)
+  (cond ((not (string= (hash-admin-pass pass) *admin-pass*))
+         (throw-request-error "Invalid credentials." :code 401))))
+
 (defun get-request-validity-check (&key count type board page offset)
   (cond ((and offset
               (< offset 0))
-         (throw-request-error "Offset must be a positive number."))
+         (throw-request-error "Offset must be a positive number." :code 422))
         ((and page
               (< page 0))
-         (throw-request-error "Page must be a positive number."))
+         (throw-request-error "Page must be a positive number." :code 422))
         ((and count
               (< count 0))
-         (throw-request-error "Count must be a positive number."))
+         (throw-request-error "Count must be a positive number." :code 422))
         ((not (or (string= type "text")
                   (string= type "file")
                   (null type)))
-         (throw-request-error "Incorrect type."))
+         (throw-request-error "Incorrect type." :code 422))
         ((and board
               (not (board-exists-p board)))
-         (throw-request-error "Board does not exist."))
+         (throw-request-error "Board does not exist." :code 404))
         ((and count
               (> count *post-get-limit*))
-         (throw-request-error "Tried to retrieve too many posts."))))
+         (throw-request-error "Tried to retrieve too many posts." :code 422))))
 
 (defun text-post-validity-check (&key text-data checksum board ip-hash)
   (cond ((> (length text-data) 255)
-         (throw-request-error "Text too long."))
+         (throw-request-error "Text too long." :code 413))
         ((eql (length text-data) 0)
-         (throw-request-error "Submitted text can't be empty."))
+         (throw-request-error "Submitted text can't be empty." :code 422))
         ((not (board-exists-p board))
-         (throw-request-error "Board does not exist."))
+         (throw-request-error "Board does not exist." :code 422))
         ((and *allow-duplicates-after*
               (post-duplicate-p checksum ip-hash *allow-duplicates-after* board))
-         (throw-request-error "Duplicate post."))))
+         (throw-request-error "Duplicate post." :code 422))
+        ((banned-p ip-hash)
+         (throw-request-error "You are banned." :code 403))))
 
 (defun file-post-validity-check (&key content-type checksum board ip-hash)
   (cond ((not (mime-type-accepted-p content-type))
-         (throw-request-error (format nil "Content type not accepted: ~A." content-type)))
+         (throw-request-error (format nil "Content type not accepted: ~A." content-type) :code 422))
         ((not (board-exists-p board))
-         (throw-request-error "Board does not exist."))
+         (throw-request-error "Board does not exist." :code 422))
         ((and *allow-duplicates-after*
               (post-duplicate-p checksum ip-hash *allow-duplicates-after* board))
-         (throw-request-error "Duplicate post."))))
+         (throw-request-error "Duplicate post." :code 422))
+        ((banned-p ip-hash)
+         (throw-request-error "You are banned." :code 403))))
 
 (defun parse-board (board)
   (let* ((trimmed-board (trim-whitespace board)))
