@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+
+{% block panel-post %}
+<div>
+    <p><span style="color: #ffffff">Author: </span>{{ post.ip-hash }}<br>
+      <span style="color: #ffffff">Board:</span> {{ post.board }}<br>
+      <span style="color: #ffffff">Date:</span> {{ post.submission-date }}</p>
+          <br>
+      <form action="/admin/action/delete-post/{{ post.id }}"  method="POST">
+      <input type="hidden" name="csrf-token" value={{ csrf-token }}>
+      <button style="font-size:1.2rem">delete this post</button>
+      </form>
+            <form action="/admin/action/ban-user/{{ post.ip-hash }}"  method="POST">
+      <input type="hidden" name="csrf-token" value={{ csrf-token }}>
+      <button style="font-size:1.2rem">ban this user</button>
+            </form>
+
+      <form action="/admin/action/delete-all-from-user/{{ post.ip-hash }}"  method="POST">
+      <input type="hidden" name="csrf-token" value={{ csrf-token }}>
+       <button style="font-size:1.2rem">delete all posts from this user</button>
+      </form>
+      </div>
+{% endblock %}
+
+{% block body %}
+  <div class="admin-navbar">
+<form action="/admin/logout" method="POST">
+  <input type="hidden" name="csrf-token" value={{ csrf-token }}>
+  <button>logout</button>
+</form>
+
+<div style="text-align:center;">
+    <a href="/admin/panel/posts">posts</a>
+  <a href="/admin/panel/bans">bans</a>
+
+  </div>
+</div>
+
+  <br>
+<div class="admin-panel">
+
+
+  <div class="panel-pagination-buttons">
+        {% if prev-page %}
+            <a href="/admin/panel/posts?page={{ prev-page }}">ᐱ</a>
+        {% endif %}
+        {% if next-page %}
+            <a href="/admin/panel/posts?page={{ next-page }}">ᐯ</a>
+        {% endif %}
+  </div>
+  <div class="panel-text-posts">
+  {% for post in text-posts %}
+  <div class="panel-post">
+    <p style="text-align: center; margin-top: 10px">{{ post.data }}</p>
+    <br>
+    {% block panel-post %}
+    {% endblock %}
+  </div>
+  {% endfor %}
+  </div>
+
+  <div class="panel-file-posts">
+    {% for post in file-posts %}
+  <div class="panel-post">
+    <img src="/uploads/{{ post.board }}/{{ post.data }}"></img>
+    <br>
+      {% block panel-post %}
+    {% endblock %}
+    </div>
+  {% endfor %}
+
+  </div>
+
+
+</div>
+
+{% endblock %}

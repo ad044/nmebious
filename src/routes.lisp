@@ -134,9 +134,10 @@
                   :http-only t)
       (redirect "/preferences"))))
 
+;; Root page
 (defroute web-root ("/" :method :get
                         :decorators (@html @check-frontend-enabled))
-  ((page :init-form 0 :parameter-type 'integer))
+    ((page :init-form 0 :parameter-type 'integer))
   (with-fail-handler (web-root :type 'web-view)
     (if (single-board-p)
         (if (and (not *pagination-on-default-frontend-enabled-p*)
@@ -153,13 +154,13 @@
 
 
 ;; Admin auth page
-(defroute admin-page ("/admin/auth" :method :get
+(defroute admin-auth-page ("/admin/auth" :method :get
                                     :decorators (@html)) ()
-  (with-fail-handler (admin-page :type 'web-view)
+  (with-fail-handler (admin-auth-page :type 'web-view)
     (start-session)
     (harden-session-cookie)
     (if (session-value :is-admin)
-        (redirect "/admin/panel")
+        (redirect "/admin/panel/posts")
         (with-flash-message
           (render-admin-auth-page :error flash-message)))))
 
@@ -175,7 +176,7 @@
       (admin-auth-validity-check username pass)
       (regenerate-session-cookie-value *session*)
       (setf (session-value :is-admin) t)
-      (redirect "/admin/panel"))))
+      (redirect "/admin/panel/posts"))))
 
 ;; POST for admin logout
 (defroute admin-logout ("/admin/logout" :method :post
@@ -186,7 +187,28 @@
     (redirect "/admin/auth")))
 
 ;; Admin panel
-(defroute admin-panel ("/admin/panel" :method :get
-                                      :decorators (@html @is-admin)) ()
-  (with-fail-handler (admin-panel)
-    (render-admin-panel)))
+(defroute admin-panel ("/admin/panel/:category" :method :get
+                                                :decorators (@html @is-admin))
+    ((page :init-form 0 :parameter-type 'integer))
+  (with-fail-handler (admin-panel :type 'web-view)
+    (switch (category :test #'string=)
+      ("posts" (render-admin-panel-posts page))
+      ("bans" (render-admin-panel-bans))
+      (t (throw-request-error "Invalid category." :code 422)))))
+
+;; POST admin action
+(defroute admin-action ("/admin/action/:action/:data" :method :post
+                                                      :decorators (@html @is-admin)) ()
+  (with-fail-handler (admin-action :type 'web-view)
+    (switch (action :test #'string=)
+      ("ban-user" (ban data))
+      ("delete-post" (delete-post data))
+      ("delete-all-from-user" (delete-all-from-user data))
+      ("unban-user"
+       (progn
+         (return-from admin-action
+           (progn
+             (unban data)
+             (redirect "/admin/panel/bans")))))
+      (t (throw-request-error "Invalid action." :code 422)))
+    (redirect "/admin/panel/posts")))

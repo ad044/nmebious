@@ -88,6 +88,8 @@
                           #:harden-session-cookie)
   (:shadowing-import-from #:trivial-file-size
                           #:file-size-in-octets)
+  (:shadowing-import-from #:alexandria
+                          #:switch)
   (:export #:start-server
            #:stop-server
            #:*port*))

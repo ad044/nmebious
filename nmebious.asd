@@ -26,12 +26,12 @@
                #:dexador
                #:quri
                #:hunchentools
-               #:trivial-file-size)
+               #:trivial-file-size
+               #:alexandria)
   :components ((:module "src"
                 :components
                 ((:file "package")
                  (:file "utils")
-                 (:file "crypto")
                  (:file "config")
                  (:file "db")
                  (:file "nmebious")

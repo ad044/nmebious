@@ -21,6 +21,16 @@
                                 ,offset))
          :alists))
 
+(defun select-posts-with-ip (count offset &key type board)
+  (query (sql-compile  `(:limit (:order-by (:select '*
+                                             :from 'post
+                                             :where (:and ,(if type `(:= 'type ,type) t)
+                                                          ,(if board `(:= 'board ,board) t)))
+                                           (:desc 'id))
+                                ,count
+                                ,offset))
+         :alists))
+
 (defun post-duplicate-p (checksum ip-hash limit board)
   (query  (:select  (:exists  (:limit (:order-by (:select 1
                                                    :from 'post
@@ -35,6 +45,15 @@
   (query (:delete-from 'post
           :where (:= 'ip-hash ip-hash))))
 
+(defun delete-post (id)
+  (query (:delete-from 'post
+          :where (:= 'id id))))
+
+(defun get-banned-users ()
+  (query (:select '*
+           :from 'ban)
+         :alists))
+
 (defun exists-p (val table col)
   (query (:select '*
            :from table
@@ -47,7 +66,8 @@
   (exists-p ip-hash 'ban 'ip-hash))
 
 (defun ban (ip-hash)
-  (query (:insert-into 'ban :set 'ip-hash ip-hash)))
+  (unless (exists-p ip-hash 'ban 'ip-hash)
+    (query (:insert-into 'ban :set 'ip-hash ip-hash))))
 
 (defun unban (ip-hash)
   (query (:delete-from 'ban

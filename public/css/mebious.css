@@ -43,7 +43,11 @@ body, input {
 }
 
 #outline button, #outline a,
-.center form button {
+.center form button,
+.panel-post form button,
+.admin-panel form button,
+.admin-navbar button,
+.admin-navbar a {
     vertical-align: middle;
     text-decoration: none;
     border: 1px solid #00cc00;
@@ -221,4 +225,75 @@ body, input {
   padding: 2px;
   display: block;
   margin: 0 auto;
+}
+
+.admin-panel {
+  border: none;
+  width: 80%;
+  display: flex;
+  margin: 0 auto;
+  font-size: 1.2rem;
+}
+
+.panel-post {
+  border: 1px solid #ffffff;
+  overflow-wrap: break-word;
+  text-align: left;
+  padding: 15px;
+}
+
+
+.panel-text-posts,
+.panel-file-posts {
+  float: left;
+  flex: 1;
+}
+
+.panel-text-posts {
+    margin-right: 20px;
+}
+
+.panel-post form {
+  display: block;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.admin-navbar {
+  display: block;
+  margin: 0 auto;
+}
+
+.admin-navbar button {
+  font-size: 20px;
+}
+
+.admin-navbar form {
+  display: inline;
+}
+
+.admin-navbar a {
+  text-align: center;
+  font-size: 20px;
+}
+
+.admin-panel .ban {
+  margin: 10px;
+  border: 1px solid #ffffff;
+  padding: 20px;
+}
+
+.admin-panel .ban form button {
+  display: block;
+  margin: 0 auto;
+}
+
+.panel-pagination-buttons a {
+  background: #000;
+  font-size: 30px;
+  border: 1px solid #0f0;
+  padding: 30px;
+  display: block;
+  color: #0f0;
+  text-decoration: none;
 }

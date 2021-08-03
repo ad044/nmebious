@@ -7,7 +7,8 @@
 (defparameter +about.html+ (compile-template* "about.html"))
 (defparameter +preferences.html+ (compile-template* "preferences.html"))
 (defparameter +auth.html+ (compile-template* "auth.html"))
-(defparameter +admin.html+ (compile-template* "admin.html"))
+(defparameter +panel-posts.html+ (compile-template* "panel-posts.html"))
+(defparameter +panel-bans.html+ (compile-template* "panel-bans.html"))
 
 ;; Text stuff
 (defun get-font ()
@@ -167,6 +168,23 @@
                     :csrf-token (session-csrf-token)
                     :error error))
 
-(defun render-admin-panel ()
-  (render-template* +admin.html+ nil
-                    :csrf-token (session-csrf-token)))
+(defun render-admin-panel-posts (&optional (page 0))
+  (let* ((text-posts (select-posts-with-ip 21 (* page 20) :type "text"))
+         (file-posts (select-posts-with-ip 21 (* page 20) :type "file")))
+    (render-template* +panel-posts.html+ nil
+                      :csrf-token (session-csrf-token)
+                      :text-posts text-posts
+                      :file-posts file-posts
+                      :prev-page (when (> page
+                                          0)
+                                   (- page 1))
+                      :next-page (when (or (> (length text-posts)
+                                              20)
+                                           (> (length file-posts)
+                                              20))
+                                   (+ page 1)))))
+
+(defun render-admin-panel-bans ()
+  (render-template* +panel-bans.html+ nil
+                    :csrf-token (session-csrf-token)
+                    :bans (get-banned-users)))
