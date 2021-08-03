@@ -12,6 +12,8 @@ services:
       - "80:80"
     depends_on:
       - app
+    logging:
+      driver: "local"
     volumes:
       - type: volume
         source: public-content
@@ -25,6 +27,8 @@ services:
     build:
       context: .
       dockerfile: docker/db/Dockerfile
+    logging:
+      driver: "local"
     environment:
       <<: *common-variables
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -39,6 +43,8 @@ services:
     ports:
       - "4005:4005"
       - "8080:8080"
+    logging:
+      driver: "local"
     volumes:
       - public-content:/usr/src/app/public
     env_file:

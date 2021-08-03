@@ -35,11 +35,14 @@
 ;; Set to NIL to disable duplicate checking
 (defparameter *allow-duplicates-after* 5)
 
+;; Filtered words
+(defparameter *filtered-words* '())
+
 ;; Env file
 ;; (Inside a docker container it won't exist since all env vars will be located inside memory, so we check for that.)
 (defparameter *env* (let* ((dotenv-path (asdf:system-relative-pathname 'nmebious ".env")))
                       (when (probe-file dotenv-path)
-                          (read-env dotenv-path))))
+                        (read-env dotenv-path))))
 
 ;; Postgres host
 ;; If ran by docker, the environment variable DB_HOST will be attached to the DB service.

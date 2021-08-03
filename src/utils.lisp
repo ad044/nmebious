@@ -79,6 +79,11 @@
 (defun single-board-p ()
   (eql (length *boards*) 1))
 
+(defun word-filtered-p (word)
+  (some #'(lambda (filter)
+            (search filter word))
+        *filtered-words*))
+
 ;; Crypto utils
 (defparameter *argon2-kdf* (make-kdf :argon2d :block-count 15000))
 
@@ -241,6 +246,8 @@
         ((and *allow-duplicates-after*
               (post-duplicate-p checksum ip-hash *allow-duplicates-after* board))
          (throw-request-error "Duplicate post." :code 422))
+        ((word-filtered-p text-data)
+         (throw-request-error "Post cannot contain a filtered word." :code 422))
         ((banned-p ip-hash)
          (throw-request-error "You are banned." :code 403))))
 
