@@ -168,6 +168,7 @@
 (defroute admin-auth ("/admin/auth" :method :post
                         :decorators (@html)) ()
   (with-fail-handler (admin-auth :type 'admin-auth)
+    (require-session-csrf-token :post)
     (let* ((post-params (post-parameters*))
            (username (or (cassoc "username" post-params :test #'string=)
                          (throw-request-error "Missing username in request body." :code 400)))
@@ -200,6 +201,7 @@
 (defroute admin-action ("/admin/action/:action/:data" :method :post
                                                       :decorators (@html @is-admin)) ()
   (with-fail-handler (admin-action :type 'web-view)
+    (require-session-csrf-token :post)
     (switch (action :test #'string=)
       ("ban-user" (ban data))
       ("delete-post" (delete-post data))
