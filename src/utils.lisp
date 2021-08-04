@@ -298,7 +298,7 @@
         "-tint" "80"
         "-dither" "FloydSteinberg"
         "-colors" "3"
-        "-brightness-contrast" (format nil "-~A" (random-in-range 20 50))
+        "-brightness-contrast" (format nil "~A" (random-in-range -25 0))
         dest))
 
 (defun format-and-save-file (src dest board)
