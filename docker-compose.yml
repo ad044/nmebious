@@ -32,6 +32,8 @@ services:
     environment:
       <<: *common-variables
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
   app:
     stdin_open: true
     tty: true
@@ -47,6 +49,9 @@ services:
       driver: "local"
     volumes:
       - public-content:/usr/src/app/public
+      - type: bind
+        source: ./src/config.lisp
+        target: /usr/src/app/src/config.lisp
     env_file:
       - ./.env
     environment:
@@ -54,3 +59,4 @@ services:
 
 volumes:
   public-content:
+  dbdata:

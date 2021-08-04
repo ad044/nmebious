@@ -134,10 +134,16 @@
     (setf nmebious::*filtered-words* '("filter"))
 
     ;; filter check
+    ;; the word itself
     (with-submit-text ("filter" test-board)
       (expect-error-with-message "Post cannot contain a filtered word." 422))
 
+    ;; the word followed by another sequence
     (with-submit-text ("filtered" test-board)
+      (expect-error-with-message "Post cannot contain a filtered word." 422))
+
+    ;; the word inside a sequence
+    (with-submit-text ("testfiltered" test-board)
       (expect-error-with-message "Post cannot contain a filtered word." 422))
 
     ;; api key check without providing a key
