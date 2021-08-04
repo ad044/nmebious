@@ -12,10 +12,7 @@
 
 ;; Text stuff
 (defun get-font ()
-  (let* ((fonts '("Times New Roman" "Times" "serif" "Arial"
-                  "Helvetica" "sans-serif" "Georgia" "Courier New"
-                  "Courier" "monospace")))
-    (nth (random (length fonts)) fonts)))
+  (nth (random (length *fonts*)) *fonts*))
 
 (defun gen-color (hue &optional (sat (random-in-range 0 100)))
   (let* ((lum (random-in-range 20 100)))
@@ -62,7 +59,10 @@
                       (gen-color 120))))
          (font-size (random-in-range 0.8 2.0))
          (left (random-in-range 0.1 40.0))
-         (font-family (get-font)))
+         (font-family (let* ((font (get-font)))
+                        (if (string= font "Arial")
+                            font
+                            (format nil "~A, Arial" font)))))
     (format nil
             "color: ~A; font-family: ~A; font-size: ~Aem; left: ~A%"
             color font-family font-size left)))

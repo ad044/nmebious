@@ -119,7 +119,8 @@ body, input {
 }
 
 .github-logo img,
-.gear img {
+.gear img,
+.nmebious-logo img{
   width: 50%;
   margin: 0 auto;
   display: block;
@@ -133,13 +134,7 @@ body, input {
 
 .nmebious-logo {
   position: absolute;
-  right: 60px;
-}
-
-.nmebious-logo img {
-  margin: 0 auto;
-  display: block;
-  margin-top: 5px;
+  right: 55px;
 }
 
 .error-page-header {

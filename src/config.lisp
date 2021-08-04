@@ -58,6 +58,11 @@
 
 ;; ==================       Configuration for the default frontend (if enabled)        ======================
 
+;; Fonts
+(defparameter *fonts*  '("Times New Roman" "Times" "serif" "Arial"
+                         "Helvetica" "sans-serif" "Georgia" "Courier New"
+                         "Courier" "monospace"))
+
 ;; Enable/disable default frontend
 (defparameter *default-frontend-enabled-p* t)
 
