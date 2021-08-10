@@ -17,7 +17,8 @@
                           #:mime-file-type)
   (:shadowing-import-from #:cl-json
                           #:decode-json-from-string
-                          #:encode-json-alist-to-string)
+                          #:encode-json-alist-to-string
+                          #:encode-json-to-string)
   (:shadowing-import-from #:local-time
                           #:universal-to-timestamp
                           #:timestamp<

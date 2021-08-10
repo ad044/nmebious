@@ -9,7 +9,8 @@
                       ,data
                       ,ip-hash
                       ,checksum))
-           :returning 'id)))
+           :returning 'id)
+          :single))
 
 (defun select-posts (count offset &key type board)
   (query (sql-compile  `(:limit (:order-by (:select 'id 'type 'data 'submission-date 'board

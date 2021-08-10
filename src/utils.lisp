@@ -128,7 +128,7 @@
                                :checksum checksum
                                :board board
                                :ip-hash ip-hash)
-     (let* ((post-id (caar (insert-post formatted-text checksum "text" board ip-hash))))
+     (let* ((post-id (insert-post formatted-text checksum "text" board ip-hash)))
        (when *socket-server-enabled-p*
          (broadcast :type 'text
                     :post-id post-id
@@ -163,7 +163,7 @@
                                  :name filename
                                  :type type)))
        (format-and-save-file src dest board)
-       (let* ((post-id (caar (insert-post full-filename checksum "file" board ip-hash))))
+       (let* ((post-id (insert-post full-filename checksum "file" board ip-hash)))
          (when *socket-server-enabled-p*
            (broadcast :type 'file
                       :post-id post-id

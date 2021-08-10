@@ -25,11 +25,10 @@
                                   :offset offset
                                   :type type
                                   :board board)
-      (encode-json-alist-to-string (pairlis '(posts)
-                                            (list (select-posts count
-                                                                offset
-                                                                :type type
-                                                                :board board)))))))
+      (encode-json-to-string (select-posts count
+                                           offset
+                                           :type type
+                                           :board board)))))
 
 ;; Server configuration in JSON format
 (defroute config ("/api/config" :method :get

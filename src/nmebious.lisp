@@ -40,10 +40,8 @@
   (disconnect-toplevel)
   (stop-hunchentoot))
 
-
 (defun main (&rest args)
   (declare (ignore args))
-
   (start-server)
   (setf swank::*loopback-interface* "0.0.0.0")
   (swank-loader:init)
@@ -54,9 +52,9 @@
                                            (search "hunchentoot" (bt:thread-name th)))
                                          (bt:all-threads)))
     (sb-sys:interactive-interrupt
-     () (progn
-          (format *error-output* "Aborting.~&")
-          (stop-server)
-          (uiop:quit)))
+      () (progn
+           (format *error-output* "Aborting.~&")
+           (stop-server)
+           (uiop:quit)))
     (error (c) (format t "Woops, an unknown error occured:~&~a~&" c))))
 

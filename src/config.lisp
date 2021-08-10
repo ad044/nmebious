@@ -81,7 +81,7 @@
                                                   (:depends-on . t)))
                                        (:pagination . ((:description . "Display pagination buttons")
                                                        (:default . t)
-                                                       (:depends-on . ,*pagination-on-default-frontend-enabled-p*)))
+                                                       (:depends-on . *pagination-on-default-frontend-enabled-p*)))
                                        (:boardlist . ((:description . "Display board list in the bottom middle of the page")
                                                       (:default . t)
                                                       (:depends-on . ,(not (single-board-p)))))

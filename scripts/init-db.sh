@@ -17,7 +17,7 @@ CREATE DATABASE nmebious_test OWNER nmebious_admin;
 CREATE TABLE post(
        id SERIAL PRIMARY KEY,
        board VARCHAR(16),
-       ip_hash CHAR(64),
+       ip_hash CHAR(32),
        submission_date TIMESTAMP,
        type CHAR(4),
        checksum CHAR(32),
@@ -25,7 +25,7 @@ CREATE TABLE post(
 );
 CREATE TABLE ban(
        id SERIAL PRIMARY KEY,
-       ip_hash CHAR(64)
+       ip_hash CHAR(32)
 );
 CREATE TABLE api_key(
        id SERIAL PRIMARY KEY,
@@ -41,7 +41,7 @@ CREATE TABLE admin(
 CREATE TABLE post(
        id SERIAL PRIMARY KEY,
        board VARCHAR(16),
-       ip_hash CHAR(64),
+       ip_hash CHAR(32),
        submission_date TIMESTAMP,
        type CHAR(4),
        checksum CHAR(32),
@@ -49,7 +49,7 @@ CREATE TABLE post(
 );
 CREATE TABLE ban(
        id SERIAL PRIMARY KEY,
-       ip_hash CHAR(64)
+       ip_hash CHAR(32)
 );
 CREATE TABLE api_key(
        id SERIAL PRIMARY KEY,

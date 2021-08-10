@@ -240,9 +240,6 @@
         (dex:get (localhost "api" "posts/"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
-                 1))
-        (is (eql (length (nmebious::cassoc :posts
-                                           json-body))
                  4))))
 
     ;; retrieving only text posts
@@ -250,29 +247,19 @@
         (dex:get (localhost "api" "posts" "?type=text"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
-                 1))
-        (is (eql (length (nmebious::cassoc :posts
-                                           json-body))
                  3))))
 
     ;; retriveing only 2 text posts
     (multiple-value-bind (body code headers)
         (dex:get (localhost "api" "posts" "?type=text&count=2"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
-        (is (eql (length json-body)
-                 1))
-        (is (eql (length (nmebious::cassoc :posts
-                                           json-body))
-                 2))))
+        (is (eql (length json-body) 2))))
 
     ;; retrieving file posts
     (multiple-value-bind (body code headers)
         (dex:get (localhost "api" "posts" "?type=file"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
         (is (eql (length json-body)
-                 1))
-        (is (eql (length (nmebious::cassoc :posts
-                                           json-body))
                  1))))
 
     ;; retrieving too many posts
@@ -344,9 +331,6 @@
           (dex:get (localhost "api" "posts" (format nil "~A?type=text" first-board)))
         (let* ((json-body (cl-json:decode-json-from-string body)))
           (is (eql (length json-body)
-                   1))
-          (is (eql (length (nmebious::cassoc :posts
-                                             json-body))
                    2))))
 
       ;; check if 2 posts on second board
@@ -354,9 +338,6 @@
           (dex:get (localhost "api" "posts" (format nil "~A?type=text" second-board)))
         (let* ((json-body (cl-json:decode-json-from-string body)))
           (is (eql (length json-body)
-                   1))
-          (is (eql (length (nmebious::cassoc :posts
-                                             json-body))
                    2))))
 
       ;; both together should be 4
@@ -364,9 +345,6 @@
           (dex:get (localhost "api" "posts" "?type=text"))
         (let* ((json-body (cl-json:decode-json-from-string body)))
           (is (eql (length json-body)
-                   1))
-          (is (eql (length (nmebious::cassoc :posts
-                                             json-body))
                    4))))
 
       ;; offset works
@@ -374,9 +352,6 @@
           (dex:get (localhost "api" "posts" "?type=text&offset=1"))
         (let* ((json-body (cl-json:decode-json-from-string body)))
           (is (eql (length json-body)
-                   1))
-          (is (eql (length (nmebious::cassoc :posts
-                                             json-body))
                    3))))
 
       ;; count works
@@ -384,9 +359,6 @@
           (dex:get (localhost "api" "posts" "?type=text&count=1"))
         (let* ((json-body (cl-json:decode-json-from-string body)))
           (is (eql (length json-body)
-                   1))
-          (is (eql (length (nmebious::cassoc :posts
-                                             json-body))
                    1)))))))
 
 
