@@ -32,3 +32,10 @@
 
 (defun unschedule-ping-timer ()
   (sb-ext:unschedule-timer *ping-timer*))
+
+
+;; Without having these defined, upon receiving a message it seems to throw an error.
+;; So we define it, but leave it empty, since we don't do anything with this data.
+(defmethod hunchensocket:text-message-received ((listener board-listener) user message))
+
+(defmethod hunchensocket:binary-message-received ((listener board-listener) user message))
