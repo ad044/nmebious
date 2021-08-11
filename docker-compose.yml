@@ -45,6 +45,7 @@ services:
     ports:
       - "4005:4005"
       - "8080:8080"
+      - "12345:12345"
     logging:
       driver: "local"
     volumes:

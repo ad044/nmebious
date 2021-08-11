@@ -1,26 +1,54 @@
+map $http_upgrade $connection_upgrade {
+	default upgrade;
+	'' close;
+}
+
 upstream nmebious {
 	server app:8080;
 }
 
+upstream nmebious_ws {
+	server app:12345;
+}
+
+limit_req_zone $binary_remote_addr zone=get_requests:10m rate=10r/s;
+limit_req_zone $binary_remote_addr zone=post_requests:10m rate=5r/s;
+limit_req_zone $binary_remote_addr zone=login_requests:10m rate=1r/s;
+
 server {
 	client_max_body_size ${MAX_FILE_SIZE}M;
+	proxy_set_header    Host            $host;
+	proxy_set_header    X-Real-IP       $remote_addr;
+	proxy_set_header    X-Forwarded-for $remote_addr;
 	listen 80;
 
+        location /ws {
+            proxy_pass http://nmebious_ws;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+        }
+
 	location / {
+		limit_req zone=get_requests burst=20 nodelay;
 		proxy_pass http://nmebious;
 	}
 
-	location /api {
-		proxy_pass http://nmebious/api;
+	location ~ /submit/(?:file|text)$ {
+		limit_req zone=post_requests burst=5 nodelay;
+		proxy_pass http://nmebious;
+	}
+
+	location ~ /auth$ {
+		limit_req zone=login_requests burst=5 nodelay;
+		proxy_pass http://nmebious;
 	}
 
 	location /static {
-		autoindex on;
 		alias /var/www/nmebious/static;
 	}
 
 	location /uploads {
-		autoindex on;
 		alias /var/www/nmebious/static/uploads;
 	}
 }

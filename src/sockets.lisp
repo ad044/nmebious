@@ -9,7 +9,7 @@
 
 (defun connect (request)
   (when (string= (script-name request)
-                 "/")
+                 "/ws")
     *board-listener-instance*))
 
 (pushnew 'connect *websocket-dispatch-table*)
