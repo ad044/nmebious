@@ -85,3 +85,6 @@ Old and stable language, for fun, and, most importantly, Lain loves Common Lisp.
 
 Load the system and run `(asdf:test-system :nmebious)`.
 One important thing to keep in mind is that the server MUST be off when running the tests.
+
+## References
+[Rose's mebious clone](https://github.com/dataphreak1001/mebious) - Used as reference for lots of stuff, and default frontend code.
