@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block body %}
+  <div class="admin-navbar">
+<form action="/admin/logout" method="POST">
+  <input type="hidden" name="csrf-token" value={{ csrf-token }}>
+  <button>logout</button>
+</form>
+
+<div style="text-align:center;">
+  <a href="/admin/panel/posts">posts</a>
+  <a href="/admin/panel/bans">bans</a>
+  <a href="/admin/panel/keys">api keys</a>
+  </div>
+</div>
+
+  <br>
+
+    {% block panel-category %}
+
+    {% endblock %}
+
+
+
+</div>
+
+{% endblock %}

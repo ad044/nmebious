@@ -47,7 +47,9 @@ body, input {
 .panel-post form button,
 .admin-panel form button,
 .admin-navbar button,
-.admin-navbar a {
+.admin-navbar a,
+.list-entry button,
+.create-api-key button {
     vertical-align: middle;
     text-decoration: none;
     border: 1px solid #00cc00;
@@ -272,15 +274,15 @@ body, input {
   font-size: 20px;
 }
 
-.admin-panel .ban {
-  margin: 10px;
-  border: 1px solid #ffffff;
+.list-entry {
+  display: inline-block;
+  margin: 20px;
+  border: 1px solid #fff;
   padding: 20px;
 }
 
-.admin-panel .ban form button {
-  display: block;
-  margin: 0 auto;
+.list-entry p {
+  font-size: 1.2rem;
 }
 
 .panel-pagination-buttons a {

@@ -1,36 +1,13 @@
-{% extends "base.html" %}
+{% extends "panel.html" %}
 
-{% block body %}
-
-  <div class="admin-navbar">
-<form action="/admin/logout" method="POST">
-  <input type="hidden" name="csrf-token" value={{ csrf-token }}>
-  <button>logout</button>
-</form>
-
-<div style="text-align:center;">
-  <a href="/admin/panel/posts">posts</a>
-  <a href="/admin/panel/bans">bans</a>
-
-  </div>
-</div>
-
-  <br>
-  <div class="admin-panel">
-
-    {% for ban in bans %}
-    <div class="ban">
+{% block panel-category %}
+      {% for ban in bans %}
+      <div class="list-entry">
     <p>IP: {{ ban.ip-hash }}</p>
         <form action="/admin/action/unban-user/{{ ban.ip-hash }}"  method="POST">
           <input type="hidden" name="csrf-token" value={{ csrf-token }}>
             <button style="font-size:1.2rem">unban this ip</button>
         </form>
         </div>
-        {% endfor %}
-
-  </div>
-
-
-</div>
-
+    {% endfor %}
 {% endblock %}

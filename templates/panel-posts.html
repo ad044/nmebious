@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "panel.html" %}
 
 
 {% block panel-post %}
@@ -23,24 +23,8 @@
       </div>
 {% endblock %}
 
-{% block body %}
-  <div class="admin-navbar">
-<form action="/admin/logout" method="POST">
-  <input type="hidden" name="csrf-token" value={{ csrf-token }}>
-  <button>logout</button>
-</form>
-
-<div style="text-align:center;">
-    <a href="/admin/panel/posts">posts</a>
-  <a href="/admin/panel/bans">bans</a>
-
-  </div>
-</div>
-
-  <br>
+{% block panel-category %}
 <div class="admin-panel">
-
-
   <div class="panel-pagination-buttons">
         {% if prev-page %}
             <a href="/admin/panel/posts?page={{ prev-page }}">ᐱ</a>
@@ -61,18 +45,15 @@
   </div>
 
   <div class="panel-file-posts">
-    {% for post in file-posts %}
-  <div class="panel-post">
-    <img src="/uploads/{{ post.board }}/{{ post.data }}"></img>
-    <br>
+   {% for post in file-posts %}
+    <div class="panel-post">
+      <img src="/uploads/{{ post.board }}/{{ post.data }}"></img>
+      <br>
       {% block panel-post %}
-    {% endblock %}
+      {% endblock %}
     </div>
   {% endfor %}
 
   </div>
-
-
-</div>
-
+  </div>
 {% endblock %}

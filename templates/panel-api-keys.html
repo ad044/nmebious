@@ -1,0 +1,19 @@
+{% extends "panel.html" %}
+
+{% block panel-category %}
+<div class="create-api-key">
+        <form action="/admin/action/create-api-key/"  method="POST">
+          <input type="hidden" name="csrf-token" value={{ csrf-token }}>
+            <button style="font-size:1.2rem">create new key</button>
+        </form>
+
+    {% for entry in api-keys %}
+    <div class="list-entry">
+    <p>key: {{ entry.key }}</p>
+        <form action="/admin/action/remove-api-key/{{ entry.key }}"  method="POST">
+          <input type="hidden" name="csrf-token" value={{ csrf-token }}>
+            <button style="font-size:1.2rem">remove this key</button>
+        </form>
+    </div>
+    {% endfor %}
+{% endblock %}

@@ -194,6 +194,7 @@
     (switch (category :test #'string=)
       ("posts" (render-admin-panel-posts page))
       ("bans" (render-admin-panel-bans))
+      ("keys" (render-admin-panel-api-keys))
       (t (throw-request-error "Invalid category." :code 422)))))
 
 ;; POST admin action
@@ -211,5 +212,17 @@
            (progn
              (unban data)
              (redirect "/admin/panel/bans")))))
+      ("remove-api-key"
+       (progn
+         (return-from admin-action
+           (progn
+             (remove-api-key data)
+             (redirect "/admin/panel/keys")))))
+      ("create-api-key"
+       (progn
+         (return-from admin-action
+           (progn
+             (create-api-key)
+             (redirect "/admin/panel/keys")))))
       (t (throw-request-error "Invalid action." :code 422)))
     (redirect "/admin/panel/posts")))

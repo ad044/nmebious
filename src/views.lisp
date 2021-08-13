@@ -9,6 +9,7 @@
 (defparameter +auth.html+ (compile-template* "auth.html"))
 (defparameter +panel-posts.html+ (compile-template* "panel-posts.html"))
 (defparameter +panel-bans.html+ (compile-template* "panel-bans.html"))
+(defparameter +panel-api-keys.html+ (compile-template* "panel-api-keys.html"))
 
 ;; Text stuff
 (defun get-font ()
@@ -188,3 +189,8 @@
   (render-template* +panel-bans.html+ nil
                     :csrf-token (session-csrf-token)
                     :bans (get-banned-users)))
+
+(defun render-admin-panel-api-keys ()
+  (render-template* +panel-api-keys.html+ nil
+                    :csrf-token (session-csrf-token)
+                    :api-keys (get-api-keys)))

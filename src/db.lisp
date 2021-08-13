@@ -55,6 +55,11 @@
            :from 'ban)
          :alists))
 
+(defun get-api-keys ()
+  (query (:select '*
+           :from 'api-key)
+         :alists))
+
 (defun exists-p (val table col)
   (query (:select '*
            :from table
@@ -74,8 +79,15 @@
   (query (:delete-from 'ban
           :where (:= 'ip-hash ip-hash))))
 
+(defun remove-api-key (api-key)
+  (query (:delete-from 'api-key
+          :where (:= 'key api-key))))
+
 (defun add-api-key (api-key)
   (query (:insert-into 'api-key :set 'key api-key)))
+
+(defun create-api-key ()
+  (query (:insert-into 'api-key :set 'key (hex (random-data 32)))))
 
 (defun admin-lookup (username)
   (query (:select '*
