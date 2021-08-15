@@ -42,7 +42,7 @@
       {% endifequal %}
       <div id="posts">
          {% for text in text-posts %}
-            <p class="post" style="{{ text.style }}">{{ text.data }}</p>
+            <p class="post" style="{{ text.style }}">{{ text.data|safe }}</p>
          {% endfor %}
       </div>
       {% for file in file-posts %}

@@ -123,16 +123,17 @@
           (submitted-text (or (cassoc "text" post-params :test #'string=)
                               (throw-request-error "No text data found in body." :code 400)))
           (formatted-text (trim-whitespace (format nil "~A" submitted-text)))
-          (checksum (hex (md5sum-string formatted-text))))
-     (text-post-validity-check :text-data formatted-text
+          (html-escaped-text (string-escape-html formatted-text))
+          (checksum (hex (md5sum-string html-escaped-text))))
+     (text-post-validity-check :text-data html-escaped-text 
                                :checksum checksum
                                :board board
                                :ip-hash ip-hash)
-     (let* ((post-id (insert-post formatted-text checksum "text" board ip-hash)))
+     (let* ((post-id (insert-post html-escaped-text checksum "text" board ip-hash)))
        (when *socket-server-enabled-p*
          (broadcast :type 'text
                     :post-id post-id
-                    :data formatted-text
+                    :data html-escaped-text 
                     :board board))
        ,@body)))
 
@@ -306,3 +307,6 @@
          (src-namestring (namestring src)))
     (ensure-directories-exist dest)
     (run-program (format-image src-namestring dest-namestring board))))
+
+(defun string-escape-html (raw-string)
+ (DJULA.FILTERS::force-escape raw-string))
