@@ -8,8 +8,6 @@ fi
 psql -U postgres <<EOF
 CREATE ROLE nmebious_admin WITH LOGIN PASSWORD '$POSTGRES_PASSWORD';
 
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO new_user;
-
 CREATE DATABASE nmebious OWNER nmebious_admin;
 CREATE DATABASE nmebious_test OWNER nmebious_admin;
 

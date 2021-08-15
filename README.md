@@ -38,7 +38,7 @@ Of course, before that we need to do some additional configuration:
   Where `POSTGRES_PASSWORD` is the password for the Postgres database, `ADMIN_USERNAME` and `ADMIN_PASSWORD` serve as credentials for the admin panel, and `MAX_FILE_SIZE` is the maximum allowed file size in megabytes.  
   Note: Please choose strong and complicated passwords and not `admenistrator123`, especially for the `ADMIN_PASSWORD` field, which you'll use to moderate the website through `/admin/panel`.
 
-- PostgreSQL must be set up with 2 databases named `nmebious` and `nmebious_test` (the second one is optional and only needed if you want to run the test suite). This can be automated by using the `init-db.sh` script located inside the `scripts` directory.
+- PostgreSQL must be set up with 2 databases named `nmebious` and `nmebious_test` (the second one is optional and only needed if you want to run the test suite). The server also uses a user called `nmebious_admin` to connect to the database. Setting all this up can be automated by using the `init-db.sh` script located inside the `scripts` directory [(make sure to enable trust authentication it to run properly)](https://wiki.archlinux.org/title/PostgreSQL#Optional_configuration).
 
 - [ImageMagick](https://imagemagick.org/) must be installed to format uploaded images.
 
