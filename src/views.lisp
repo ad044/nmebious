@@ -11,7 +11,29 @@
 (defparameter +panel-bans.html+ (compile-template* "panel-bans.html"))
 (defparameter +panel-api-keys.html+ (compile-template* "panel-api-keys.html"))
 
-;; Text stuff
+;; -----------------------------------------------------------------------------
+;;; Color Constructor
+;; -----------------------------------------------------------------------------
+
+(defstruct color
+  (red   0 :type (integer 0 256))
+  (blue  0 :type (integer 0 256))
+  (green 0 :type (integer 0 256)))
+
+(defun hex-to-color (hex)
+  (make-color :red   (/ (parse-integer (subseq hex 1 3) :radix 16) 255)
+              :green (/ (parse-integer (subseq hex 3 5) :radix 16) 255)
+              :blue  (/ (parse-integer (subseq hex 5 7) :radix 16) 255)))
+
+(defun on-colors (f rgb)
+  (funcall f (color-blue rgb) (color-red rgb) (color-green rgb)))
+
+
+
+;; -----------------------------------------------------------------------------
+;;; Text Stuff
+;; -----------------------------------------------------------------------------
+
 (defun get-font ()
   (nth (random (length *fonts*)) *fonts*))
 
@@ -20,33 +42,36 @@
     (format nil "hsl(~A, ~A%, ~A%)" hue sat lum)))
 
 (defun hex-to-hsl (hex)
-  (let* ((r (/ (parse-integer (subseq hex 1 3) :radix 16) 255))
-         (g (/ (parse-integer (subseq hex 3 5) :radix 16) 255))
-         (b (/ (parse-integer (subseq hex 5 7) :radix 16) 255))
-         (max (max r g b))
-         (min (min r g b))
-         (l (/ (+ max min) 2)))
-    (if (eql max min)
-        (list 0 0 (* 100 l))
-        (let* ((d (- max min))
-               (s (if (> l 0.5)
-                      (- 2 max min)
-                      (/ d (+ max min))))
-               (h (/ (cond ((eql max r)
-                            (+ (/ (- g b)
-                                  d)
-                               (if (< g b)
-                                   6 0)))
-                           ((eql max g)
-                            (+ (/ (- b r)
-                                  d)
-                               2))
-                           ((eql max b)
-                            (+ (/ (- r g)
-                                  d)
-                               4)))
-                     6)))
-          (list (round (* 360 h)) (round (* s 100)) (round (* 100 l)))))))
+  (let* ((rgb (hex-to-color hex))
+         (max (on-colors #'max rgb))
+         (min (on-colors #'min rgb))
+         (average (/ (+ max min) 2)))
+    (flet ((color-difference (col-1 col-2 offset)
+             (let ((difference (- max min)))
+               (+ (/ (- col-1 col-2) difference)
+                  offset))))
+      (if (eql max min)
+          (list 0 0 (* 100 average))
+          (let* ((s (if (> average 0.5)
+                        (- 2 max min)
+                        (/ (- max min) (+ max min))))
+                 (h (/ (cond ((eql max (color-red rgb))
+                              (color-difference (color-green rgb)
+                                                (color-blue rgb)
+                                                (if (< (color-green rgb) (color-blue rgb))
+                                                    6
+                                                    0)))
+                             ((eql max (color-green rgb))
+                              (color-difference (color-blue rgb)
+                                                (color-red rgb)
+                                                2))
+                             ;; blue must be the max
+                             (t
+                              (color-difference (color-red rgb)
+                                                (color-green rgb)
+                                                4)))
+                       6)))
+            (list (round (* 360 h)) (round (* s 100)) (round (* 100 average))))))))
 
 (defun text-style (board)
   (let* ((color (let* ((board-color-hex (color-for-board board)))
