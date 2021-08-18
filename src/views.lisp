@@ -163,9 +163,9 @@
                           :csrf-token (session-csrf-token)
                           :next-page (when (or file-posts-next-page-p
                                                text-posts-next-page-p)
-                                       (+1 page))
+                                       (1+ page))
                           :prev-page (when (> page 0)
-                                       (-1 page))
+                                       (1- page))
                           :error error)
         (render-error-page "This page does not exist." 404))))
 
@@ -208,10 +208,10 @@
                       :text-posts text-posts
                       :file-posts file-posts
                       :prev-page (when (> page 0)
-                                   (-1 page))
+                                   (1- page))
                       :next-page (when (or (> (length text-posts) 20)
                                            (> (length file-posts) 20))
-                                   (+1 page)))))
+                                   (1+ page)))))
 
 (defun render-admin-panel-bans ()
   (render-template* +panel-bans.html+ nil
