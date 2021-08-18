@@ -71,7 +71,9 @@
                                                 (color-green rgb)
                                                 4)))
                        6)))
-            (list (round (* 360 h)) (round (* s 100)) (round (* 100 average))))))))
+            (list (round (* 360 h))
+                  (round (* s 100))
+                  (round (* 100 average))))))))
 
 (defun text-style (board)
   (let* ((color (let* ((board-color-hex (color-for-board board)))
@@ -102,17 +104,21 @@
                                  (#\ü #\ù)
                                  (#\ÿ)
                                  (#\$)))))
-    (map 'string #'(lambda (char)
-                     (let* ((corruptions-for-character (cassoc char corruptions)))
-                       (if (and corruptions-for-character
-                                (eql (random 2)
-                                     1))
-                           (nth (random (length corruptions-for-character)) corruptions-for-character)
-                           char)))
+    (map 'string
+         #'(lambda (char)
+             (let* ((corruptions-for-character (cassoc char corruptions)))
+               (if (and corruptions-for-character
+                        (eql (random 2)
+                             1))
+                   (nth (random (length corruptions-for-character))
+                        corruptions-for-character)
+                   char)))
          text)))
 
 (defun stylize-text-post (post)
-  (acons :data (corrupt (cassoc :data post)) (acons :style (text-style (cassoc :board post)) post)))
+  (acons :data (corrupt (cassoc :data post))
+         (acons :style (text-style (cassoc :board post))
+                post)))
 
 ;; File stuff
 (defun file-style ()
@@ -121,7 +127,8 @@
          (opacity (random-in-range 0.5 1.0))
          (top (random-in-range 7.0 50.0)))
     (format nil
-            "z-index: ~A; left: ~A%; opacity: ~A; top: ~A%" z-index left opacity top)))
+            "z-index: ~A; left: ~A%; opacity: ~A; top: ~A%"
+            z-index left opacity top)))
 
 (defun stylize-file-post (post)
   (acons :style (file-style) post))
@@ -135,12 +142,12 @@
          (file-posts (select-posts (+ 1 *file-display-count*) (* page *file-display-count*) :type "file" :board board))
          (text-posts-next-page-p (> (length text-posts) *text-display-count*))
          (file-posts-next-page-p (> (length file-posts) *file-display-count*))
-         (stylized-text-posts (map 'list #'stylize-text-post (if text-posts-next-page-p
-                                                                 (without-last text-posts)
-                                                                 text-posts)))
-         (stylized-file-posts (map 'list #'stylize-file-post (if file-posts-next-page-p
-                                                                 (without-last file-posts)
-                                                                 file-posts))))
+         (stylized-text-posts (mapcar #'stylize-text-post (if text-posts-next-page-p
+                                                              (without-last text-posts)
+                                                              text-posts)))
+         (stylized-file-posts (mapcar #'stylize-file-post (if file-posts-next-page-p
+                                                              (without-last file-posts)
+                                                              file-posts))))
     (if (or  (> (length text-posts) 0)
              (> (length file-posts) 0)
              (eql page 0))
@@ -154,12 +161,11 @@
                                          (alist-keys *boards*))
                           :board-data (cassoc board *boards* :test #'string=)
                           :csrf-token (session-csrf-token)
-                          :next-page (when (or
-                                            file-posts-next-page-p
-                                            text-posts-next-page-p)
-                                       (+ page 1))
+                          :next-page (when (or file-posts-next-page-p
+                                               text-posts-next-page-p)
+                                       (+1 page))
                           :prev-page (when (> page 0)
-                                       (- page 1))
+                                       (-1 page))
                           :error error)
         (render-error-page "This page does not exist." 404))))
 
@@ -178,7 +184,7 @@
 
 (defun render-preferences-page ()
   (let* ((user-prefs (parse-user-preferences))
-         (render-prefs (map 'list
+         (render-prefs (mapcar
                             #'(lambda (pref)
                                 (let* ((keyword-pref (car pref)))
                                   (car (acons keyword-pref (acons :current
@@ -201,14 +207,11 @@
                       :csrf-token (session-csrf-token)
                       :text-posts text-posts
                       :file-posts file-posts
-                      :prev-page (when (> page
-                                          0)
-                                   (- page 1))
-                      :next-page (when (or (> (length text-posts)
-                                              20)
-                                           (> (length file-posts)
-                                              20))
-                                   (+ page 1)))))
+                      :prev-page (when (> page 0)
+                                   (-1 page))
+                      :next-page (when (or (> (length text-posts) 20)
+                                           (> (length file-posts) 20))
+                                   (+1 page)))))
 
 (defun render-admin-panel-bans ()
   (render-template* +panel-bans.html+ nil
