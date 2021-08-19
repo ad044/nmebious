@@ -35,29 +35,27 @@
         *dispatch-table*))
 
 (defun alist-keys (alist)
-  (loop for (key . value) in alist
-        collect key))
+  (mapcar #'car alist))
 
 (defun color-for-board (board)
   (or (cassoc :color (cassoc board *boards* :test #'string=))
       "#00ff00"))
 
 (defun trim-whitespace (str)
-  (string-trim '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout)
+  (string-trim '(#\Space #\Newline #\Backspace #\Tab
+                 #\Linefeed #\Page #\Return #\Rubout)
                str))
 
 (defun instance-has-backgrounds-p ()
-  (> (length  (loop for (key . value)
-                      in *boards*
-                    when (cassoc :background value)
-                      collect (cassoc :background value)))
-     0))
+  (remove-if-not #'(lambda (alist)
+                     (cassoc :background (cdr alist)))
+                 *boards*))
 
 (defun parse-user-preferences ()
   (if (cookie-in "mebious-user")
       (url-decode-params (cookie-in "mebious-user"))
       (progn
-        (let* ((default-prefs (form-encoded-default-preferences)))
+        (let ((default-prefs (form-encoded-default-preferences)))
           (set-cookie "mebious-user"
                       :value default-prefs
                       :max-age 315360000
@@ -67,14 +65,15 @@
           (url-decode-params default-prefs)))))
 
 (defun form-encoded-default-preferences ()
-  (url-encode-params (reduce #'(lambda (acc pref)
-                                 (acons (string-downcase (car pref))
-                                        (if  (cassoc :default (cdr pref) :test #'string=)
-                                             "on"
-                                             "off")
-                                        acc))
-                             *web-user-preferences*
-                             :initial-value '())))
+  (url-encode-params
+   (reduce #'(lambda (acc pref)
+               (acons (string-downcase (car pref))
+                      (if  (cassoc :default (cdr pref) :test #'string=)
+                           "on"
+                           "off")
+                      acc))
+           *web-user-preferences*
+           :initial-value '())))
 
 (defun single-board-p ()
   (eql (length *boards*) 1))
@@ -85,7 +84,8 @@
         *filtered-words*))
 
 ;; Crypto utils
-(defparameter *argon2-kdf* (make-kdf :argon2d :block-count 15000))
+(defparameter *argon2-kdf*
+  (make-kdf :argon2d :block-count 15000))
 
 (defun hash-ip (ip)
   (hex (md5sum-string ip)))
@@ -99,12 +99,14 @@
 
 ;; Request handling
 (defun api-success ()
-  (encode-json-alist-to-string (pairlis '(status) '("Success"))))
+  (encode-json-alist-to-string
+   (pairlis '(status) '("Success"))))
 
 (defun api-fail-with-message (msg code)
   (setf (return-code*) code)
-  (encode-json-alist-to-string (pairlis '(message status)
-                                        (list msg "Error"))))
+  (encode-json-alist-to-string
+   (pairlis '(message status)
+            (list msg "Error"))))
 
 (defun redirect-back-to-board ()
   (if (single-board-p)
@@ -125,7 +127,7 @@
           (formatted-text (trim-whitespace (format nil "~A" submitted-text)))
           (html-escaped-text (string-escape-html formatted-text))
           (checksum (hex (md5sum-string html-escaped-text))))
-     (text-post-validity-check :text-data html-escaped-text 
+     (text-post-validity-check :text-data html-escaped-text
                                :checksum checksum
                                :board board
                                :ip-hash ip-hash)
@@ -133,7 +135,7 @@
        (when *socket-server-enabled-p*
          (broadcast :type 'text
                     :post-id post-id
-                    :data html-escaped-text 
+                    :data html-escaped-text
                     :board board))
        ,@body)))
 
@@ -279,13 +281,13 @@
         (second minute hour day month year)
       (get-decoded-time)
     (format nil "~{~A~#[~;-~:;~]~}"
-            (list  year
-                   month
-                   day
-                   hour
-                   minute
-                   second
-                   (hex (random-data 10))))))
+            (list year
+                  month
+                  day
+                  hour
+                  minute
+                  second
+                  (hex (random-data 10))))))
 
 (defun mime-type-accepted-p (mime-type)
   (member mime-type *accepted-mime-types* :test #'string=))

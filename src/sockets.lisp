@@ -5,7 +5,8 @@
 
 (defclass user (websocket-client) ())
 
-(defparameter *board-listener-instance* (make-instance 'board-listener))
+(defparameter *board-listener-instance*
+  (make-instance 'board-listener))
 
 (defun connect (request)
   (when (string= (script-name request)
@@ -15,17 +16,20 @@
 (pushnew 'connect *websocket-dispatch-table*)
 
 (defun broadcast (&key type post-id data board)
-  (loop for peer in (clients *board-listener-instance*)
-        do (send-text-message peer
-                              (encode-json-alist-to-string (pairlis '(type id data board)
-                                                                    (list type post-id data board))))))
+  (mapcar #'(lambda (peer)
+              (send-text-message peer
+               (encode-json-alist-to-string
+                (pairlis '(type id data board)
+                         (list type post-id data board)))))
+          (clients *board-listener-instance*)))
 
 (defun send-ping ()
-  (loop for peer in (clients *board-listener-instance*)
-        ;; opcode for ping is 9
-        do (hunchensocket::send-frame peer #x9 nil)))
+  (mapcar #'(lambda (peer)
+              (hunchensocket::send-frame peer #x9 nil))
+          (clients *board-listener-instance*)))
 
-(defparameter *ping-timer* (sb-ext:make-timer #'send-ping :thread t))
+(defparameter *ping-timer*
+  (sb-ext:make-timer #'send-ping :thread t))
 
 (defun schedule-ping-timer ()
   (sb-ext:schedule-timer *ping-timer* 20 :repeat-interval 20))

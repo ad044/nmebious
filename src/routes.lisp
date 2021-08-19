@@ -42,24 +42,22 @@
                                   :decorators (@rss))
     ((page :init-form 0 :parameter-type 'integer))
   (with-fail-handler (rss-feed :type 'web-view)
-    (let* ((board (parse-board board)))
-      (if (and board
-               (single-board-p))
+    (let ((board (parse-board board)))
+      (if (and board (single-board-p))
           (render-error-page "This instance only has a single board." 404)
           (progn
             (get-request-validity-check :board board :page page)
             (let* ((posts (select-posts 30 (* page 30) :board board))
-                   (sorted-posts (sort posts
-                                       #'sort-posts-by-id)))
+                   (sorted-posts (sort posts #'sort-posts-by-id)))
               (with-output-to-string (s)
                 (with-rss2 (s :encoding "utf-8")
                   (rss-channel-header "nmebious" *web-url*
                                       :description "monitoring the wired")
                   (dolist (item sorted-posts)
-                    (let* ((data (cassoc :data item))
-                           (id (cassoc :id item))
-                           (board (cassoc :board item))
-                           (date (cassoc :submission-date item)))
+                    (let ((data (cassoc :data item))
+                          (id (cassoc :id item))
+                          (board (cassoc :board item))
+                          (date (cassoc :submission-date item)))
                       (rss-item nil
                                 :guid id
                                 :category (unless (single-board-p) board)
@@ -117,14 +115,16 @@
   (with-fail-handler (set-web-user-preferences :type 'web-view)
     (let* ((preferences (alist-keys *web-user-preferences*))
            (post-params (post-parameters*))
-           (new-preferences (url-encode-params (reduce #'(lambda (acc pref)
-                                                           (acons (string-downcase pref)
-                                                                  (if  (cassoc pref post-params :test #'string=)
-                                                                       "on"
-                                                                       "off")
-                                                                  acc))
-                                                       preferences
-                                                       :initial-value '()))))
+           (new-preferences
+            (url-encode-params
+             (reduce #'(lambda (acc pref)
+                         (acons (string-downcase pref)
+                                (if (cassoc pref post-params :test #'string=)
+                                    "on"
+                                    "off")
+                                acc))
+                     preferences
+                     :initial-value '()))))
       (set-cookie "mebious-user"
                   :value new-preferences
                   :max-age 315360000
@@ -154,7 +154,7 @@
 
 ;; Admin auth page
 (defroute admin-auth-page ("/admin/auth" :method :get
-                                    :decorators (@html)) ()
+                                         :decorators (@html)) ()
   (with-fail-handler (admin-auth-page :type 'web-view)
     (start-session)
     (harden-session-cookie)
@@ -165,7 +165,7 @@
 
 ;; POST for admin authentication
 (defroute admin-auth ("/admin/auth" :method :post
-                        :decorators (@html)) ()
+                                    :decorators (@html)) ()
   (with-fail-handler (admin-auth :type 'admin-auth)
     (require-session-csrf-token :post)
     (let* ((post-params (post-parameters*))
