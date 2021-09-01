@@ -45,7 +45,7 @@
 ;; Env file
 ;; (Inside a docker container it won't exist since all env vars will be located inside memory, so we check for that.)
 (defparameter *env*
-  (let* ((dotenv-path (asdf:system-relative-pathname 'nmebious ".env")))
+  (let ((dotenv-path (asdf:system-relative-pathname 'nmebious ".env")))
     (when (probe-file dotenv-path)
       (read-env dotenv-path))))
 
@@ -62,7 +62,7 @@
 
 ;; Maximum file size (in mbs)
 (defparameter *max-file-size*
-  (parse-integer (parse-envvar "MAX_FILE_SIZE")))
+  (parse-envvar "MAX_FILE_SIZE"))
 
 ;; ==================       Configuration for the default frontend (if enabled)        ======================
 

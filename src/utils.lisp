@@ -2,11 +2,22 @@
 
 ;; Random utils
 (defun parse-envvar (envvar)
-  (or (sb-ext:posix-getenv envvar)
-      (gethash envvar *env*)))
+  (handler-case 
+      (let ((envvar-value (or (sb-ext:posix-getenv envvar)
+			                        (gethash envvar *env*))))
+	(if (numeric-string-p envvar-value)
+	    (parse-integer envvar-value)
+	    envvar-value))
+    (error ()
+      (format t
+	      "WARNING: Missing envvar ~A. You won't be able to start the server!~%"
+	      envvar))))
 
 (defun random-in-range (start end)
   (+ start (random (- end start))))
+
+(defun numeric-string-p (string)
+  (ignore-errors (parse-number:parse-number string)))
 
 (defun hex (bytes)
   (byte-array-to-hex-string bytes))
