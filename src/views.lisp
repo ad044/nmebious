@@ -183,15 +183,15 @@
                     :pagination-enabled-p *pagination-on-default-frontend-enabled-p*))
 
 (defun render-preferences-page ()
-  (let* ((user-prefs (parse-user-preferences))
-         (render-prefs (mapcar
-                            #'(lambda (pref)
-                                (let* ((keyword-pref (car pref)))
-                                  (car (acons keyword-pref (acons :current
-                                                                  (cassoc (string-downcase (car pref)) user-prefs :test #'string=)
-                                                                  (cassoc keyword-pref *web-user-preferences*))
-                                              nil))))
-                            *web-user-preferences*)))
+  (let* ((current-user-prefs (parse-user-preferences))
+	 (render-prefs (mapcar
+			#'(lambda (pref)
+			    (append pref
+				    (list (cons :current
+						(cassoc (string-downcase (car pref))
+							current-user-prefs
+							:test #'string=)))))
+			*web-user-preferences*)))
     (render-template* +preferences.html+ nil
                       :preferences render-prefs)))
 

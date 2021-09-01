@@ -26,7 +26,6 @@
     (merge-pathnames *static-dir* "favicon.ico"))
 
 (defun start-hunchentoot ()
-  (setf *default-content-type* "application/json")
   (start *server*)
   (when *socket-server-enabled-p*
     (start *socket-server*))
