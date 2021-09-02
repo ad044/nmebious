@@ -1,12 +1,12 @@
 (defpackage #:nmebious
   (:use #:cl)
-  (:shadowing-import-from #:hunchensocket
-                          #:websocket-resource
-                          #:websocket-client
-                          #:*websocket-dispatch-table*
-                          #:clients
-                          #:send-text-message
-                          #:send-binary-message)
+  (:shadowing-import-from #:websocket-driver
+                          #:on
+			  #:start-connection
+			  #:send
+			  #:send-ping
+			  #:make-server
+			  #:make-client)
   (:shadowing-import-from #:xml-emitter
                           #:with-rss2
                           #:rss-channel-header

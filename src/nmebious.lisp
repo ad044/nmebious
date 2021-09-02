@@ -1,13 +1,11 @@
 (in-package #:nmebious)
 
-(defparameter *server*
+(defvar *server*
   (make-instance 'easy-routes:easy-routes-acceptor
                  :port *port*
                  :document-root nil))
 
-(defvar *socket-server*
-  (make-instance 'hunchensocket:websocket-acceptor
-                 :port 12345))
+(defvar *socket-handler* nil)
 
 (defun start-db ()
   (set-local-time-cl-postgres-readers)
@@ -28,14 +26,17 @@
 (defun start-hunchentoot ()
   (start *server*)
   (when *socket-server-enabled-p*
-    (start *socket-server*))
-  (schedule-ping-timer))
+    (setf *socket-handler* (clack:clackup #'socket-server
+					  :server :hunchentoot
+					  :port 12345))
+    (schedule-ping-timer)))
 
 (defun stop-hunchentoot ()
   (stop *server*)
-  (when *socket-server-enabled-p*
-    (stop *socket-server*))
-  (unschedule-ping-timer))
+  (when (and *socket-server-enabled-p*
+	     *socket-handler*)
+    (clack:stop *socket-handler*)
+    (unschedule-ping-timer)))
 
 (defun start-server ()
   (start-db)

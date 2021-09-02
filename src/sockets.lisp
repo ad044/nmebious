@@ -1,45 +1,43 @@
 (in-package #:nmebious)
 
-(defclass board-listener (websocket-resource) ()
-  (:default-initargs :client-class 'user))
+(defvar *connections* (make-hash-table))
 
-(defclass user (websocket-client) ())
+(defun handle-close-connection (connection)
+  (remhash connection *connections*))
 
-(defparameter *board-listener-instance*
-  (make-instance 'board-listener))
+(defun handle-new-connection (connection)
+  (setf (gethash connection *connections*)
+        (format nil "user-~a" (random 100000))))
 
-(defun connect (request)
-  (when (string= (script-name request)
-                 "/ws")
-    *board-listener-instance*))
+(defun broadcast-to-room (&key type post-id data board)
+  (let ((message (encode-json-alist-to-string
+                  (pairlis '(type id data board)
+                           (list type post-id data board)))))
+    (loop :for con :being :the :hash-key :of *connections* :do
+      (send con message))))
 
-(pushnew 'connect *websocket-dispatch-table*)
+(defun socket-server (env)
+  (let ((ws (make-server env)))
+    (on :open ws
+        (lambda ()
+	  (handle-new-connection ws)))
+    (on :close ws
+        (lambda (&key code reason)
+          (declare (ignore code reason))
+          (handle-close-connection ws)))
+    (lambda (responder)
+      (declare (ignore responder))
+      (start-connection ws))))
 
-(defun broadcast (&key type post-id data board)
-  (mapcar #'(lambda (peer)
-              (send-text-message peer
-               (encode-json-alist-to-string
-                (pairlis '(type id data board)
-                         (list type post-id data board)))))
-          (clients *board-listener-instance*)))
+(defun ping-all-connections ()
+  (loop :for con :being :the :hash-key :of *connections* :do
+    (send-ping con)))
 
-(defun send-ping ()
-  (mapcar #'(lambda (peer)
-              (hunchensocket::send-frame peer #x9 nil))
-          (clients *board-listener-instance*)))
-
-(defparameter *ping-timer*
-  (sb-ext:make-timer #'send-ping :thread t))
+(defvar *ping-timer*
+  (sb-ext:make-timer #'ping-all-connections :thread t))
 
 (defun schedule-ping-timer ()
   (sb-ext:schedule-timer *ping-timer* 20 :repeat-interval 20))
 
 (defun unschedule-ping-timer ()
   (sb-ext:unschedule-timer *ping-timer*))
-
-
-;; Without having these defined, upon receiving a message it seems to throw an error.
-;; So we define it, but leave it empty, since we don't do anything with this data.
-(defmethod hunchensocket:text-message-received ((listener board-listener) user message))
-
-(defmethod hunchensocket:binary-message-received ((listener board-listener) user message))

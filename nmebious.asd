@@ -21,22 +21,23 @@
                #:cl-dotenv
                #:swank
                #:xml-emitter
-               #:hunchensocket
+               #:websocket-driver
                #:easy-routes+djula
                #:dexador
                #:quri
                #:hunchentools
                #:trivial-file-size
-               #:alexandria)
+               #:alexandria
+	       #:clack)
   :components ((:module "src"
                 :components
                 ((:file "package")
-                 (:file "utils")
+		 (:file "utils")
                  (:file "config")
                  (:file "db")
+		 (:file "sockets")
                  (:file "nmebious")
                  (:file "views")
                  (:file "decorators")
-                 (:file "routes")
-                 (:file "sockets"))))
+                 (:file "routes"))))
   :in-order-to ((test-op (test-op "nmebious-test"))))

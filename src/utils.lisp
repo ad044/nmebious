@@ -4,7 +4,7 @@
 (defun parse-envvar (envvar)
   (handler-case 
       (let ((envvar-value (or (sb-ext:posix-getenv envvar)
-			                        (gethash envvar *env*))))
+			      (gethash envvar *env*))))
 	(if (numeric-string-p envvar-value)
 	    (parse-integer envvar-value)
 	    envvar-value))
@@ -148,10 +148,10 @@
 				 board
 				 ip-hash)))
        (when *socket-server-enabled-p*
-         (broadcast :type 'text
-                    :post-id post-id
-                    :data html-escaped-text
-                    :board board))
+         (broadcast-to-room :type 'text
+			    :post-id post-id
+			    :data html-escaped-text
+			    :board board))
        ,@body)))
 
 (defmacro after-submit-file (&body body)
@@ -187,10 +187,10 @@
 				   board
 				   ip-hash)))
          (when *socket-server-enabled-p*
-           (broadcast :type 'file
-                      :post-id post-id
-                      :data full-filename
-                      :board board))
+           (broadcast-to-room :type 'file
+			      :post-id post-id
+			      :data full-filename
+			      :board board))
          ,@body))))
 
 (defun throw-request-error (msg &key code)
