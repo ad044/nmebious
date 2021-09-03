@@ -1,32 +1,13 @@
 (in-package #:nmebious)
 
-;; Random utils
-(defun parse-envvar (envvar)
-  (handler-case 
-      (let ((envvar-value (or (sb-ext:posix-getenv envvar)
-			      (gethash envvar *env*))))
-	(if (numeric-string-p envvar-value)
-	    (parse-integer envvar-value)
-	    envvar-value))
-    (error ()
-      (format t
-	      "WARNING: Missing envvar ~A. You won't be able to start the server!~%"
-	      envvar))))
-
 (defun random-in-range (start end)
   (+ start (random (- end start))))
-
-(defun numeric-string-p (string)
-  (ignore-errors (parse-number:parse-number string)))
 
 (defun hex (bytes)
   (byte-array-to-hex-string bytes))
 
 (defun cassoc (item alist &rest args &key &allow-other-keys)
   (cdr (apply #'assoc item alist args)))
-
-(defun numeric-string-p (string)
-  (ignore-errors (parse-integer string)))
 
 (defun sort-posts-by-id (a b)
   (> (cassoc :id a)
@@ -49,7 +30,7 @@
   (mapcar #'car alist))
 
 (defun color-for-board (board)
-  (or (cassoc :color (cassoc board *boards* :test #'string=))
+  (or (cassoc :color (cassoc board (get-config :boards) :test #'string=))
       "#00ff00"))
 
 (defun trim-whitespace (str)
@@ -58,9 +39,9 @@
                str))
 
 (defun instance-has-backgrounds-p ()
-  (remove-if-not #'(lambda (alist)
-                     (cassoc :background (cdr alist)))
-                 *boards*))
+  (remove-if-not (lambda (alist)
+                   (cassoc :background (cdr alist)))
+                 (get-config :boards)))
 
 (defun parse-user-preferences ()
   (if (cookie-in "mebious-user")
@@ -77,22 +58,23 @@
 
 (defun form-encoded-default-preferences ()
   (url-encode-params
-   (reduce #'(lambda (acc pref)
-               (acons (string-downcase (car pref))
-                      (if  (cassoc :default (cdr pref) :test #'string=)
-                           "on"
-                           "off")
-                      acc))
-           *web-user-preferences*
+   (reduce (lambda (acc pref)
+             (acons (string-downcase (car pref))
+                    (if  (cassoc :default (cdr pref)
+				 :test #'string=)
+                        "on"
+                      "off")
+                    acc))
+           (get-config :web-user-preferences)
            :initial-value '())))
 
 (defun single-board-p ()
-  (eql (length *boards*) 1))
+  (eql (length (get-config :boards)) 1))
 
 (defun word-filtered-p (word)
-  (some #'(lambda (filter)
-            (search filter word))
-        *filtered-words*))
+  (some (lambda (filter)
+          (search filter word))
+        (get-config :filtered-words)))
 
 ;; Crypto utils
 (defparameter *argon2-kdf*
@@ -147,7 +129,7 @@
 				 "text"
 				 board
 				 ip-hash)))
-       (when *socket-server-enabled-p*
+       (when (get-config :socket-server-enabled-p)
          (broadcast-to-room :type 'text
 			    :post-id post-id
 			    :data html-escaped-text
@@ -177,7 +159,7 @@
      (let* ((filename (gen-filename))
             (type (mime-file-type content-type))
             (full-filename (concatenate 'string filename "." type))
-            (dest (make-pathname :directory (append (pathname-directory *uploads-dir*) (list board))
+            (dest (make-pathname :directory (append (pathname-directory (get-config :uploads-dir)) (list board))
                                  :name filename
                                  :type type)))
        (format-and-save-file src dest board)
@@ -186,7 +168,7 @@
 				   "file"
 				   board
 				   ip-hash)))
-         (when *socket-server-enabled-p*
+         (when (get-config :socket-server-enabled-p)
            (broadcast-to-room :type 'file
 			      :post-id post-id
 			      :data full-filename
@@ -218,19 +200,19 @@
         (fail (e)
           (send-error "Bad request." 400))
         (catch-error (e)
-          (let* ((message (message e)))
+          (let ((message (message e)))
             (send-error (cassoc :error-message message) (cassoc :code message)))))
      (handler-bind ((request-error #'catch-error)
                     (error #'fail))
        ,@body)))
 
 (defmacro with-flash-message (&body body)
-  `(let* ((flash-message (session-value :flash-message)))
+  `(let ((flash-message (session-value :flash-message)))
      (setf (session-value :flash-message) nil)
      (progn ,@body)))
 
 (defun admin-auth-validity-check (username pass)
-  (let* ((lookup (car (admin-lookup username))))
+  (let ((lookup (car (admin-lookup username))))
     (cond ((or (not (cassoc :username lookup))
                (not (string= (hash-pass pass
                                         (hex-string-to-byte-array (cassoc :salt lookup)))
@@ -255,7 +237,7 @@
               (not (board-exists-p board)))
          (throw-request-error "Board does not exist." :code 404))
         ((and count
-              (> count *post-get-limit*))
+              (> count (get-config :post-get-limit)))
          (throw-request-error "Tried to retrieve too many posts." :code 422))))
 
 (defun text-post-validity-check (&key text-data checksum board ip-hash)
@@ -265,8 +247,8 @@
          (throw-request-error "Submitted text can't be empty." :code 422))
         ((not (board-exists-p board))
          (throw-request-error "Board does not exist." :code 422))
-        ((and *allow-duplicates-after*
-              (post-duplicate-p checksum ip-hash *allow-duplicates-after* board))
+        ((and (get-config :allow-duplicates-after)
+              (post-duplicate-p checksum ip-hash (get-config :allow-duplicates-after) board))
          (throw-request-error "Duplicate post." :code 422))
         ((word-filtered-p text-data)
          (throw-request-error "Post cannot contain a filtered word." :code 422))
@@ -278,21 +260,21 @@
          (throw-request-error (format nil "Content type not accepted: ~A." content-type) :code 422))
         ((not (board-exists-p board))
          (throw-request-error "Board does not exist." :code 422))
-        ((and *allow-duplicates-after*
-              (post-duplicate-p checksum ip-hash *allow-duplicates-after* board))
+        ((and (get-config :allow-duplicates-after)
+              (post-duplicate-p checksum ip-hash (get-config :allow-duplicates-after) board))
          (throw-request-error "Duplicate post." :code 422))
         ((banned-p ip-hash)
          (throw-request-error "You are banned." :code 403))
-        ((> file-size *max-file-size*)
-         (throw-request-error (format nil "Submitted files can't be bigger than ~A MB." *max-file-size*) :code 413))))
+        ((> file-size (get-config :max-file-size))
+         (throw-request-error (format nil "Submitted files can't be bigger than ~A MB." (get-config :max-file-size)) :code 413))))
 
 (defun parse-board (board)
-  (let* ((trimmed-board (trim-whitespace board)))
+  (let ((trimmed-board (trim-whitespace board)))
     (cond ((string= "" trimmed-board) nil)
           (t trimmed-board))))
 
 (defun board-exists-p (board)
-  (member board (alist-keys *boards*) :test #'string=))
+  (member board (alist-keys (get-config :boards)) :test #'string=))
 
 ;; File saving/handling
 (defun gen-filename ()
@@ -309,7 +291,7 @@
                   (hex (random-data 10))))))
 
 (defun mime-type-accepted-p (mime-type)
-  (member mime-type *accepted-mime-types* :test #'string=))
+  (member mime-type (get-config :accepted-mime-types) :test #'string=))
 
 (defun format-image (src dest board)
   (list "convert"

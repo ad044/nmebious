@@ -73,7 +73,8 @@
                           #:request-method*
                           #:define-easy-handler
                           #:regenerate-session-cookie-value
-                          #:delete-session-value)
+                          #:delete-session-value
+			  #:started-p)
   (:shadowing-import-from #:easy-routes
                           #:defroute)
   (:shadowing-import-from #:djula
@@ -92,8 +93,7 @@
   (:shadowing-import-from #:alexandria
                           #:switch)
   (:export #:start-server
-           #:stop-server
-           #:*port*))
+           #:stop-server))
 
 
 (in-package :cl-json)

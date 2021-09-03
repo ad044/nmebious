@@ -35,10 +35,10 @@
 ;; -----------------------------------------------------------------------------
 
 (defun get-font ()
-  (nth (random (length *fonts*)) *fonts*))
+  (nth (random (length (get-config :fonts))) (get-config :fonts)))
 
 (defun gen-color (hue &optional (sat (random-in-range 0 100)))
-  (let* ((lum (random-in-range 20 100)))
+  (let ((lum (random-in-range 20 100)))
     (format nil "hsl(~A, ~A%, ~A%)" hue sat lum)))
 
 (defun hex-to-hsl (hex)
@@ -52,67 +52,69 @@
                   offset))))
       (if (eql max min)
           (list 0 0 (* 100 average))
-          (let* ((s (if (> average 0.5)
-                        (- 2 max min)
-                        (/ (- max min) (+ max min))))
-                 (h (/ (cond ((eql max (color-red rgb))
-                              (color-difference (color-green rgb)
-                                                (color-blue rgb)
-                                                (if (< (color-green rgb) (color-blue rgb))
-                                                    6
-                                                    0)))
-                             ((eql max (color-green rgb))
-                              (color-difference (color-blue rgb)
-                                                (color-red rgb)
-                                                2))
-                             ;; blue must be the max
-                             (t
-                              (color-difference (color-red rgb)
-                                                (color-green rgb)
-                                                4)))
-                       6)))
+          (let ((s (if (> average 0.5)
+                       (- 2 max min)
+                       (/ (- max min)
+			  (+ max min))))
+                (h (/ (cond ((eql max (color-red rgb))
+                             (color-difference (color-green rgb)
+                                               (color-blue rgb)
+                                               (if (< (color-green rgb)
+						      (color-blue rgb))
+                                                   6
+                                                   0)))
+                            ((eql max (color-green rgb))
+                             (color-difference (color-blue rgb)
+                                               (color-red rgb)
+                                               2))
+			    ;; blue must be the max
+                            (t
+                             (color-difference (color-red rgb)
+                                               (color-green rgb)
+                                               4)))
+                      6)))
             (list (round (* 360 h))
                   (round (* s 100))
                   (round (* 100 average))))))))
 
 (defun text-style (board)
-  (let* ((color (let* ((board-color-hex (color-for-board board)))
-                  (if board-color-hex
-                      (let* ((board-color-hsl (hex-to-hsl board-color-hex)))
-                        ;; if achromatic
-                        (if (and (eql 0 (first board-color-hsl))
-                                 (eql 0 (second board-color-hsl)))
-                            (gen-color 0 0)
-                            (gen-color (first board-color-hsl))))
-                      (gen-color 120))))
-         (font-size (random-in-range 0.8 2.0))
-         (left (random-in-range 0.1 40.0))
-         (font-family (let* ((font (get-font)))
-                        (if (string= font "Arial")
-                            font
-                            (format nil "~A, Arial" font)))))
+  (let ((color (let ((board-color-hex (color-for-board board)))
+                 (if board-color-hex
+                     (let ((board-color-hsl (hex-to-hsl board-color-hex)))
+		       ;; if achromatic
+                       (if (and (eql 0 (first board-color-hsl))
+                                (eql 0 (second board-color-hsl)))
+                           (gen-color 0 0)
+                           (gen-color (first board-color-hsl))))
+                     (gen-color 120))))
+        (font-size (random-in-range 0.8 2.0))
+        (left (random-in-range 0.1 40.0))
+        (font-family (let ((font (get-font)))
+                       (if (string= font "Arial")
+                           font
+                           (format nil "~A, Arial" font)))))
     (format nil
             "color: ~A; font-family: ~A; font-size: ~Aem; left: ~A%"
             color font-family font-size left)))
 
 (defun corrupt (text)
-  (let* ((corruptions (pairlis '(#\a #\e #\i #\o #\u #\y #\s)
-                               '((#\á #\ã #\à #\@)
-                                 (#\è #\ë #\ê)
-                                 (#\ï #\î #\1)
-                                 (#\ø #\ò #\ô)
-                                 (#\ü #\ù)
-                                 (#\ÿ)
-                                 (#\$)))))
+  (let ((corruptions (pairlis '(#\a #\e #\i #\o #\u #\y #\s)
+                             '((#\á #\ã #\à #\@)
+                               (#\è #\ë #\ê)
+                               (#\ï #\î #\1)
+                               (#\ø #\ò #\ô)
+                               (#\ü #\ù)
+                               (#\ÿ)
+                               (#\$)))))
     (map 'string
-         #'(lambda (char)
-             (let* ((corruptions-for-character (cassoc char corruptions)))
-               (if (and corruptions-for-character
-                        (eql (random 2)
-                             1))
-                   (nth (random (length corruptions-for-character))
-                        corruptions-for-character)
-                   char)))
+         (lambda (char)
+           (let ((corruptions-for-character (cassoc char corruptions)))
+             (if (and corruptions-for-character
+                      (eql (random 2)
+                           1))
+                 (nth (random (length corruptions-for-character))
+                      corruptions-for-character)
+               char)))
          text)))
 
 (defun stylize-text-post (post)
@@ -122,10 +124,10 @@
 
 ;; File stuff
 (defun file-style ()
-  (let* ((z-index (- (random-in-range 1 10)))
-         (left (random-in-range 0.1 50.0))
-         (opacity (random-in-range 0.5 1.0))
-         (top (random-in-range 7.0 50.0)))
+  (let ((z-index (- (random-in-range 1 10)))
+        (left (random-in-range 0.1 50.0))
+        (opacity (random-in-range 0.5 1.0))
+        (top (random-in-range 7.0 50.0)))
     (format nil
             "z-index: ~A; left: ~A%; opacity: ~A; top: ~A%"
             z-index left opacity top)))
@@ -138,10 +140,16 @@
   ;; we get 1 extra post for each type to determine whether or not there is a next page
   ;; this is hacky, but its the most optimal solution i can think of currently.
   ;; if you have a better idea, feel free to shoot a pr.
-  (let* ((text-posts (select-posts (+ 1 *text-display-count*) (* page *text-display-count*) :type "text" :board board))
-         (file-posts (select-posts (+ 1 *file-display-count*) (* page *file-display-count*) :type "file" :board board))
-         (text-posts-next-page-p (> (length text-posts) *text-display-count*))
-         (file-posts-next-page-p (> (length file-posts) *file-display-count*))
+  (let* ((text-posts (select-posts (+ 1 (get-config :text-display-count))
+				   (* page (get-config :text-display-count))
+				   :type "text"
+				   :board board))
+         (file-posts (select-posts (+ 1 (get-config :file-display-count))
+				   (* page (get-config :file-display-count))
+				   :type "file"
+				   :board board))
+         (text-posts-next-page-p (> (length text-posts) (get-config :text-display-count)))
+         (file-posts-next-page-p (> (length file-posts) (get-config :file-display-count)))
          (stylized-text-posts (mapcar #'stylize-text-post (if text-posts-next-page-p
                                                               (without-last text-posts)
                                                               text-posts)))
@@ -158,8 +166,8 @@
                           :single-board-p (single-board-p)
                           :user-prefs (parse-user-preferences)
                           :board-names (unless (single-board-p)
-                                         (alist-keys *boards*))
-                          :board-data (cassoc board *boards* :test #'string=)
+                                         (alist-keys (get-config :boards)))
+                          :board-data (cassoc board (get-config :boards) :test #'string=)
                           :csrf-token (session-csrf-token)
                           :next-page (when (or file-posts-next-page-p
                                                text-posts-next-page-p)
@@ -176,22 +184,22 @@
 
 (defun render-about-page ()
   (render-template* +about.html+ nil
-                    :api-requires-key *api-requires-key*
-                    :boards *boards*
-                    :accepted-mime-types *accepted-mime-types*
-                    :max-file-size (write-to-string  *max-file-size*)
-                    :pagination-enabled-p *pagination-on-default-frontend-enabled-p*))
+                    :api-requires-key (get-config :api-requires-key)
+                    :boards (get-config :boards)
+                    :accepted-mime-types (get-config :accepted-mime-types)
+                    :max-file-size (write-to-string  (get-config :max-file-size))
+                    :pagination-enabled-p (get-config :pagination-on-default-frontend-enabled-p)))
 
 (defun render-preferences-page ()
-  (let* ((current-user-prefs (parse-user-preferences))
+  (let ((current-user-prefs (parse-user-preferences))
 	 (render-prefs (mapcar
-			#'(lambda (pref)
-			    (append pref
-				    (list (cons :current
-						(cassoc (string-downcase (car pref))
-							current-user-prefs
-							:test #'string=)))))
-			*web-user-preferences*)))
+			(lambda (pref)
+			  (append pref
+				  (list (cons :current
+					      (cassoc (string-downcase (car pref))
+						      current-user-prefs
+						      :test #'string=)))))
+			(get-config :web-user-preferences))))
     (render-template* +preferences.html+ nil
                       :preferences render-prefs)))
 
@@ -201,8 +209,8 @@
                     :error error))
 
 (defun render-admin-panel-posts (&optional (page 0))
-  (let* ((text-posts (select-posts-with-ip 21 (* page 20) :type "text"))
-         (file-posts (select-posts-with-ip 21 (* page 20) :type "file")))
+  (let ((text-posts (select-posts-with-ip 21 (* page 20) :type "text"))
+        (file-posts (select-posts-with-ip 21 (* page 20) :type "file")))
     (render-template* +panel-posts.html+ nil
                       :csrf-token (session-csrf-token)
                       :text-posts text-posts

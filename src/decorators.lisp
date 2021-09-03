@@ -1,8 +1,8 @@
 (in-package #:nmebious)
 
 (defun @check-api-key (next)
-  (let* ((api-key (cassoc "api-key" (post-parameters*) :test #'string=)))
-    (if *api-requires-key*
+  (let ((api-key (cassoc "api-key" (post-parameters*) :test #'string=)))
+    (if (get-config :api-requires-key)
         (cond ((not api-key)
                (api-fail-with-message "Must provide an API key." 400))
               ((not (api-key-valid-p api-key))
@@ -11,7 +11,7 @@
         (funcall next))))
 
 (defun @check-frontend-enabled (next)
-  (if *default-frontend-enabled-p*
+  (if (get-config :default-frontend-enabled-p)
       (funcall next)
       (render-error-page "This instance does not have the default frontend enabled." 404)))
 

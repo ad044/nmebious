@@ -2,30 +2,33 @@
 
 (defvar *server*
   (make-instance 'easy-routes:easy-routes-acceptor
-                 :port *port*
+                 :port (get-config :port)
                  :document-root nil))
+
+(defvar *database-connected-p* nil)
 
 (defvar *socket-handler* nil)
 
-(defun start-db ()
+(defun start-db (&optional (db "nmebious") (user "nmebious_admin"))
   (set-local-time-cl-postgres-readers)
-  (connect-toplevel "nmebious"
-                    "nmebious_admin"
-                    *db-pass*
-                    *db-host*)
-  (register-admin-user (parse-envvar "ADMIN_USERNAME")
-                       (parse-envvar "ADMIN_PASSWORD")))
+  (connect-toplevel db
+		    user
+		    (get-config :db-pass)
+		    (get-config :db-host))
+  (setf *database-connected-p* t)
+  (register-admin-user (get-config :admin-username) 
+                       (get-config :admin-pass)))
 
 (define-static-resource "/static/"
-    *static-dir*)
+    (get-config :static-dir))
 (define-static-resource "/uploads/"
-    *uploads-dir*)
+    (get-config :uploads-dir))
 (define-static-resource-file "/favicon.ico"
-    (merge-pathnames *static-dir* "favicon.ico"))
+    (merge-pathnames (get-config :static-dir) "favicon.ico"))
 
 (defun start-hunchentoot ()
   (start *server*)
-  (when *socket-server-enabled-p*
+  (when (get-config :socket-server-enabled-p)
     (setf *socket-handler* (clack:clackup #'socket-server
 					  :server :hunchentoot
 					  :port 12345))
@@ -33,22 +36,32 @@
 
 (defun stop-hunchentoot ()
   (stop *server*)
-  (when (and *socket-server-enabled-p*
+  (when (and (get-config :socket-server-enabled-p)
 	     *socket-handler*)
     (clack:stop *socket-handler*)
     (unschedule-ping-timer)))
 
-(defun start-server ()
-  (start-db)
-  (start-hunchentoot))
+(defun start-server (&optional (config *default-config*))
+  (load-config config)
+  (unless *database-connected-p*
+    (start-db))
+  (unless (started-p *server*)
+    (start-hunchentoot)))
 
 (defun stop-server ()
-  (disconnect-toplevel)
-  (stop-hunchentoot))
+  (when *database-connected-p*
+    (disconnect-toplevel)
+    (setf *database-connected-p* nil))
+  (when (started-p *server*)
+    (stop-hunchentoot)))
 
 (defun main (&rest args)
   (declare (ignore args))
-  (start-server)
+  (start-server
+   (or *config*
+       (progn 
+	 (format t "~%WARNING: No custom configuration found, falling back to default.~%")
+	 *default-config*)))
   (setf swank::*loopback-interface* "0.0.0.0")
   (swank-loader:init)
   (swank:create-server :port 4005

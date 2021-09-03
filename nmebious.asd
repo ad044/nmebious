@@ -28,12 +28,13 @@
                #:hunchentools
                #:trivial-file-size
                #:alexandria
-	       #:clack)
+	       #:clack
+	       #:fset)
   :components ((:module "src"
                 :components
                 ((:file "package")
+		 (:file "config")
 		 (:file "utils")
-                 (:file "config")
                  (:file "db")
 		 (:file "sockets")
                  (:file "nmebious")

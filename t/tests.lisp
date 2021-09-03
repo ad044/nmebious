@@ -1,5 +1,5 @@
 (defpackage #:nmebious-test
-  (:use #:cl #:fiveam))
+  (:use #:cl #:fiveam #:nmebious))
 
 (in-package #:nmebious-test)
 
@@ -7,45 +7,24 @@
 
 (in-suite :nmebious)
 
-(def-fixture test-env ()
-  (let* ((test-board "first")
-         (allow-duplicates-default nmebious::*allow-duplicates-after*)
-         (api-requires-key-default nmebious::*api-requires-key*)
-         (accepted-mime-types-default nmebious::*accepted-mime-types*)
-         (boards-default nmebious::*boards*)
-         (file-size-default nmebious::*max-file-size*)
-         (filters-default nmebious::*filtered-words*))
-    (unwind-protect
-         (if (hunchentoot:started-p nmebious::*server*)
-             (format t "The application can't be running while testing. Stop the server and retry.")
-             (progn
-               (unless (hunchentoot:started-p nmebious::*server*)
-                 (nmebious::start-hunchentoot))
-
-               (postmodern:connect-toplevel "nmebious_test"
-                                            "nmebious_admin"
-                                            nmebious::*db-pass*
-                                            nmebious::*db-host*)
-               (setf nmebious::*boards* '(("first" . ((:background . nil) (:color . nil)))
-                                          ("second" . ((:background . nil) (:color . nil)))))
-               (setf nmebious::*api-requires-key* nil)
-               (handler-bind ((dex:http-request-failed #'dex:ignore-and-continue))
-                 (&body))))
-      (progn
-        ;; reset everything back
-        (setf nmebious::*allow-duplicates-after* allow-duplicates-default)
-        (setf nmebious::*api-requires-key* api-requires-key-default)
-        (setf nmebious::*accepted-mime-types* accepted-mime-types-default)
-        (setf nmebious::*boards* boards-default)
-        (setf nmebious::*max-file-size* file-size-default)
-        (setf nmebious::*filtered-words* filters-default)
-        ;; clean test database
-        (postmodern:query (:delete-from 'post))
-        (postmodern:query (:delete-from 'api-key))
-        ;; disconnect
-        (postmodern:disconnect-toplevel)
-        (when (hunchentoot:started-p nmebious::*server*)
-          (nmebious::stop-hunchentoot))))))
+(def-fixture test-env (config)
+  (if (hunchentoot:started-p nmebious::*server*)
+      (format t "The application can't be running while testing. Stop the server and retry.")
+      (unwind-protect
+	   (let ((test-board (caar (nmebious::get-config :boards))))
+	     (nmebious::load-config config)
+	     (nmebious::start-hunchentoot)
+	     (unless nmebious::*database-connected-p*
+	       (nmebious::start-db "nmebious_test" "nmebious_admin"))
+             (handler-bind ((dex:http-request-failed #'dex:ignore-and-continue))
+	       (&body)))
+	(progn
+	  ;; clean test database
+	  (postmodern:query (:delete-from 'post))
+	  (postmodern:query (:delete-from 'api-key))
+	  (postmodern:query (:delete-from 'admin))
+	  ;; disconnect
+	  (nmebious::stop-server)))))
 
 (defun test-file (filename)
   (asdf:system-relative-pathname 'nmebious (format nil "t/~A" filename)))
@@ -53,7 +32,7 @@
 (defun localhost (&rest path)
   (format nil
           "http://localhost:~A/~{~A~#[~;/~:;/~]~}"
-          nmebious::*port*
+          nmebious::(get-config :port)
           path))
 
 (defmacro expect-success ()
@@ -86,10 +65,60 @@
      (declare (ignore headers uri))
      ,@body))
 
-(test submit-text
-  (with-fixture test-env ()
-    (postmodern:query (:delete-from 'post))
+(test duplicate-checking
+  (with-fixture test-env ((nmebious::extend-config
+			      nmebious::*default-config*
+			      :allow-duplicates-after 5))
+    (with-submit-text ("firsttest" test-board)
+      (expect-success))
+    
+    ;; Throws an error since its duplicate
+    (with-submit-text ("firsttest" test-board)
+      (expect-error-with-message "Duplicate post." 422))))
 
+(test filtered-words
+  (with-fixture test-env ((nmebious::extend-config
+			      nmebious::*default-config*
+			      :filtered-words '("filter")))
+    ;; the word itself
+    (with-submit-text ("filter" test-board)
+      (expect-error-with-message "Post cannot contain a filtered word." 422))
+
+    ;; the word followed by another sequence
+    (with-submit-text ("filtered" test-board)
+      (expect-error-with-message "Post cannot contain a filtered word." 422))
+
+    ;; the word inside a sequence
+    (with-submit-text ("testfiltered" test-board)
+      (expect-error-with-message "Post cannot contain a filtered word." 422))))
+
+(test api-key
+  (with-fixture test-env ((nmebious::extend-config
+			      nmebious::*default-config*
+			      :api-requires-key t))
+    ;; api key check without providing a key
+    (with-submit-text ("keytest" test-board)
+      (expect-error-with-message "Must provide an API key." 400))
+
+    ;; with valid key
+    (nmebious::add-api-key "test-key")
+    (multiple-value-bind (body code headers uri)
+        (dexador:post  (localhost "api" "submit" "text")
+		       :content (format nil "board=~A&text=~A&api-key=test-key" test-board "test")
+		       :headers '((:content-type . "application/x-www-form-urlencoded")))
+      (declare (ignore headers uri))
+      (expect-success))
+
+    ;; with invalid key
+    (multiple-value-bind (body code headers uri)
+        (dexador:post  (localhost "api" "submit" "text")
+		       :content (format nil "board=~A&text=~A&api-key=bad-key" test-board "test")
+		       :headers '((:content-type . "application/x-www-form-urlencoded")))
+      (declare (ignore headers uri))
+      (expect-error-with-message "Invalid API key." 401))))
+
+(test submit-text
+  (with-fixture test-env (nmebious::*default-config*)
     ;; random string
     (with-submit-text ("firsttest" test-board)
       (expect-success))
@@ -106,11 +135,6 @@
     (with-submit-text ("testphrase" "doesntexist")
       (expect-error-with-message "Board does not exist." 422))
 
-    ;; duplicate checking works
-    (setf nmebious::*allow-duplicates-after* 5)
-    (with-submit-text ("firsttest" test-board)
-      (expect-error-with-message "Duplicate post." 422))
-
     ;; text too long
     (with-submit-text ((make-string 256 :initial-element #\a) test-board)
       (expect-error-with-message "Text too long." 413))
@@ -118,64 +142,58 @@
     ;; incorrectly named key for text
     (multiple-value-bind (body code headers uri)
         (dexador:post  (localhost "api" "submit" "text")
-                       :content (format nil "board=~A&incorrect=~A" test-board "test")
-                       :headers '((:content-type . "application/x-www-form-urlencoded")))
+		       :content (format nil "board=~A&incorrect=~A" test-board "test")
+		       :headers '((:content-type . "application/x-www-form-urlencoded")))
       (declare (ignore headers uri))
       (expect-error-with-message "No text data found in body." 400))
 
     ;; incorrectly named key for board
     (multiple-value-bind (body code headers uri)
         (dexador:post  (localhost "api" "submit" "text")
-                       :content (format nil "incorrect=~A&text=~A" test-board "test")
-                       :headers '((:content-type . "application/x-www-form-urlencoded")))
+		       :content (format nil "incorrect=~A&text=~A" test-board "test")
+		       :headers '((:content-type . "application/x-www-form-urlencoded")))
       (declare (ignore headers uri))
-      (expect-error-with-message "No board data found." 400))
+      (expect-error-with-message "No board data found." 400))))
 
-    (setf nmebious::*filtered-words* '("filter"))
+(test max-file-size-check
+  (with-fixture test-env ((nmebious::extend-config
+			      nmebious::*default-config*
+			      :max-file-size 0))
+    ;; file size limit check
+    (with-submit-file ("test.jpg" test-board)
+      (expect-error-with-message "Submitted files can't be bigger than 0 MB." 413))))
 
-    ;; filter check
-    ;; the word itself
-    (with-submit-text ("filter" test-board)
-      (expect-error-with-message "Post cannot contain a filtered word." 422))
-
-    ;; the word followed by another sequence
-    (with-submit-text ("filtered" test-board)
-      (expect-error-with-message "Post cannot contain a filtered word." 422))
-
-    ;; the word inside a sequence
-    (with-submit-text ("testfiltered" test-board)
-      (expect-error-with-message "Post cannot contain a filtered word." 422))
-
-    ;; api key check without providing a key
-    (setf nmebious::*api-requires-key* t)
-    (with-submit-text ("keytest" test-board)
+(test api-key-check-files
+  (with-fixture test-env ((nmebious::extend-config
+			      nmebious::*default-config*
+			      :api-requires-key t
+			      :post-get-limit nil))
+    ;; without api key
+    (with-submit-file ("test.jpg" test-board)
       (expect-error-with-message "Must provide an API key." 400))
 
     ;; with valid key
     (nmebious::add-api-key "test-key")
     (multiple-value-bind (body code headers uri)
-        (dexador:post  (localhost "api" "submit" "text")
-                       :content (format nil "board=~A&text=~A&api-key=test-key" test-board "test")
-                       :headers '((:content-type . "application/x-www-form-urlencoded")))
+        (dex:post (localhost "api" "submit" "file")
+                  :content (pairlis '("file" "board" "api-key")
+				    (list (test-file "test.jpg") test-board "test-key")))
       (declare (ignore headers uri))
       (expect-success))
 
     ;; with invalid key
     (multiple-value-bind (body code headers uri)
-        (dexador:post  (localhost "api" "submit" "text")
-                       :content (format nil "board=~A&text=~A&api-key=bad-key" test-board "test")
-                       :headers '((:content-type . "application/x-www-form-urlencoded")))
+        (dex:post (localhost "api" "submit" "file")
+                  :content (pairlis '("test" "board" "api-key")
+				    (list (test-file "test.jpg") test-board "bad-key")))
       (declare (ignore headers uri))
       (expect-error-with-message "Invalid API key." 401))))
 
-
 (test submit-file
-  (with-fixture test-env ()
-    (postmodern:query (:delete-from 'post))
-
-    (setf nmebious::*allow-duplicates-after* nil)
-    (setf nmebious::*accepted-mime-types* '("image/jpeg"))
-
+  (with-fixture test-env ((nmebious::extend-config
+			      nmebious::*default-config*
+			      :post-get-limit nil
+			      :accepted-mime-types '("image/jpeg")))
     ;; jpg image (supported format)
     (with-submit-file ("test.jpg" test-board)
       (expect-success))
@@ -188,44 +206,12 @@
     (multiple-value-bind (body code headers uri)
         (dex:post (localhost "api" "submit" "file")
                   :content (pairlis '("test" "board")
-                                    (list (test-file "test.jpg") test-board)))
+				    (list (test-file "test.jpg") test-board)))
       (declare (ignore headers uri))
-      (expect-error-with-message "No file data found." 400))
-
-    (setf nmebious::*max-file-size* 0)
-
-    ;; file size limit check
-    (with-submit-file ("test.jpg" test-board)
-      (expect-error-with-message "Submitted files can't be bigger than 0 MB." 413))
-
-    (setf nmebious::*max-file-size* 2)
-
-    (setf nmebious::*api-requires-key* t)
-
-    ;; without api key
-    (with-submit-file ("test.jpg" test-board)
-      (expect-error-with-message "Must provide an API key." 400))
-
-    ;; with valid key
-    (nmebious::add-api-key "test-key")
-    (setf nmebious::*allow-duplicates-after* nil)
-    (multiple-value-bind (body code headers uri)
-        (dex:post (localhost "api" "submit" "file")
-                  :content (pairlis '("file" "board" "api-key")
-                                    (list (test-file "test.jpg") test-board "test-key")))
-      (declare (ignore headers uri))
-      (expect-success))
-
-    ;; with invalid key
-    (multiple-value-bind (body code headers uri)
-        (dex:post (localhost "api" "submit" "file")
-                  :content (pairlis '("test" "board" "api-key")
-                                    (list (test-file "test.jpg") test-board "bad-key")))
-      (declare (ignore headers uri))
-      (expect-error-with-message "Invalid API key." 401))))
+      (expect-error-with-message "No file data found." 400))))
 
 (test get-posts
-  (with-fixture test-env ()
+  (with-fixture test-env (nmebious::*default-config*)
     ;; insert test data
     (dotimes (i 3)
       (dexador:post  (localhost "api" "submit" "text")
@@ -267,7 +253,7 @@
         (dex:get (localhost "api" "posts" (format nil
                                                   "?type=text&count=~A"
                                                   (write-to-string (+ 1
-                                                                      nmebious::*post-get-limit*)))))
+                                                                      nmebious::(get-config :post-get-limit))))))
       (let* ((json-body (cl-json:decode-json-from-string body))
              (message (nmebious::cassoc :message json-body)))
         (is (eql 422
@@ -314,8 +300,8 @@
 
     (postmodern:query (:delete-from 'post))
 
-    (let* ((first-board (caar nmebious::*boards*))
-           (second-board (caadr nmebious::*boards*)))
+    (let* ((first-board (caar nmebious::(get-config :boards)))
+           (second-board (caadr nmebious::(get-config :boards))))
 
       ;; insert random data
       (dotimes (i 2)
@@ -363,18 +349,16 @@
 
 
 (test get-server-config
-  (with-fixture test-env ()
+  (with-fixture test-env (nmebious::*default-config*)
     ;; check if get server parameters works
     (multiple-value-bind (body code headers)
         (dex:get (localhost "api" "config"))
       (let* ((json-body (cl-json:decode-json-from-string body)))
-        
         (is (equalp (cl-json::encode-json-alist-to-string (nmebious::cassoc :boards json-body))
-                    (cl-json::encode-json-alist-to-string '(("first" . ((:background . nil) (:color . nil)))
-                                                            ("second" . ((:background . nil) (:color . nil))))))
+                    (cl-json::encode-json-alist-to-string (nmebious::get-config :boards)))
         (is (equalp (nmebious::cassoc :post-get-limit json-body)
-                    nmebious::*post-get-limit*))
+                    (nmebious::get-config :post-get-limit)))
         (is (equalp (nmebious::cassoc :accepted-mime-types json-body)
-                    nmebious::*accepted-mime-types*))
+                    (nmebious::get-config :accepted-mime-types)))
         (is (equalp (nmebious::cassoc :max-file-size json-body)
-                    nmebious::*max-file-size*)))))))
+                    (nmebious::get-config :max-file-size))))))))

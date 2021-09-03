@@ -35,7 +35,7 @@
                                 :decorators (@json @check-api-key)) ()
   (with-fail-handler (config)
     (encode-json-alist-to-string (pairlis '(boards accepted-mime-types post-get-limit max-file-size)
-                                          (list  *boards* *accepted-mime-types* *post-get-limit* *max-file-size*)))))
+                                          (list  (get-config :boards) (get-config :accepted-mime-types) (get-config :post-get-limit) (get-config :max-file-size))))))
 
 ;; RSS feed
 (defroute rss-feed ("/rss/:board" :method :get
@@ -51,7 +51,7 @@
                    (sorted-posts (sort posts #'sort-posts-by-id)))
               (with-output-to-string (s)
                 (with-rss2 (s :encoding "utf-8")
-                  (rss-channel-header "nmebious" *web-url*
+                  (rss-channel-header "nmebious" (get-config :web-url)
                                       :description "monitoring the wired")
                   (dolist (item sorted-posts)
                     (let ((data (cassoc :data item))
@@ -86,7 +86,7 @@
      ((page :init-form 0 :parameter-type 'integer))
   (with-fail-handler (web-board :type 'web-view)
     (if (or (single-board-p)
-            (and (not *pagination-on-default-frontend-enabled-p*)
+            (and (not (get-config :pagination-on-default-frontend-enabled-p))
                  (> page 0)))
         (render-error-page "This instance has pagination disabled." 403)
         (progn
@@ -113,16 +113,16 @@
 (defroute set-web-user-preferences ("/preferences" :method :post
                                 :decorators (@html @check-frontend-enabled)) ()
   (with-fail-handler (set-web-user-preferences :type 'web-view)
-    (let* ((preferences (alist-keys *web-user-preferences*))
+    (let* ((preferences (alist-keys (get-config :web-user-preferences)))
            (post-params (post-parameters*))
            (new-preferences
             (url-encode-params
-             (reduce #'(lambda (acc pref)
-                         (acons (string-downcase pref)
-                                (if (cassoc pref post-params :test #'string=)
-                                    "on"
-                                    "off")
-                                acc))
+             (reduce (lambda (acc pref)
+                       (acons (string-downcase pref)
+                              (if (cassoc pref post-params :test #'string=)
+                                  "on"
+                                "off")
+                              acc))
                      preferences
                      :initial-value '()))))
       (set-cookie "mebious-user"
@@ -139,7 +139,7 @@
     ((page :init-form 0 :parameter-type 'integer))
   (with-fail-handler (web-root :type 'web-view)
     (if (single-board-p)
-        (if (and (not *pagination-on-default-frontend-enabled-p*)
+        (if (and (not (get-config :pagination-on-default-frontend-enabled-p))
                  (> page 0))
             (render-error-page "This instance has pagination disabled." 403)
             (progn
@@ -147,9 +147,9 @@
               (harden-session-cookie)
               (with-flash-message
                 (get-request-validity-check :page page)
-                (setf (session-value :board) (caar *boards*))
-                (render-board (caar *boards*) :page page :error flash-message))))
-        (redirect (format nil "/boards/~A" (caar *boards*))))))
+                (setf (session-value :board) (caar (get-config :boards)))
+                (render-board (caar (get-config :boards)) :page page :error flash-message))))
+        (redirect (format nil "/boards/~A" (caar (get-config :boards)))))))
 
 
 ;; Admin auth page

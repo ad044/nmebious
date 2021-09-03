@@ -53,4 +53,10 @@ CREATE TABLE api_key(
        id SERIAL PRIMARY KEY,
        key TEXT
 );
+CREATE TABLE admin(
+       id SERIAL PRIMARY KEY,
+       username TEXT,
+       password TEXT,
+       salt TEXT
+);
 EOF
