@@ -46,16 +46,33 @@ Of course, before that we need to do some additional configuration:
 
 ## Configuration
 
-The configuration is located inside `src/config.lisp`.
-Here is a list of things that you'll likely want to modify or at least look into:
-- `*web-url*` - The URL of the website where `nmebious` is being hosted (this will be displayed on the RSS feed).
-- `*boards*` - Board names, backgrounds, colors. Must be 1 or more. You can opt to only have one board if you're going for a "classic" mebious look, or have more, in which case the default frontend will display a list of them. As for what the boards should be, you decide! They are just tools to separate context between each other, for example a `technology` board would contain posts on that topic, etc.
-- `*api-requires-key*` - Whether or not the API for POSTing/GETting data will be open to the public. If set to `nil` (false), anyone will be able to access the api, if set to `t` (true), only those with an API key will be able to access it (You'll be able to manage these keys via the admin panel).
-- `*socket-server-enabled*` - If enabled, a client that supports WebSockets will receive updates on new posts, which can be used to update the feed realtime. If you don't plan on using alternative frontends for your instance, you should probably set this to `nil`.
-- `*allow-duplicates-after*` - A number stating how many unique posts a user can make until being allowed to post a duplicate. Set to `nil` if you want to allow duplicate posts instantly.
-- `*filtered-words*` - Words that should be filtered, must be a list of strings, for example `'("filter1" "filter2")`
+The configuration is located inside `src/config.lisp`.  
+Do not modify the original `*default-config*` variable, since the test suite depends on it.  
+Instead, set the `*config*` varible to your liking. There are two ways of doing this:
 
-For more options look into the `config.lisp` file itself.
+1. Using `extend-config`:
+```
+;; Example
+;; Here the config will have all the defaults, with `web-url` and `api-requires-key` being set to new values.
+(defvar *config*
+  (extend-config *default-config*
+		 :web-url "new-url"
+		 :api-requires-key t))
+```
+this way, you can define a new configuration based on the original one. It will replace the specified values with new ones.  
+2. Directly copying the value of `*default-config*`, and setting that as `*config*`, and modifying stuff as needed afterwards.  
+
+Both of these are valid, but the first approach is recommended.
+
+Here is a list of things that you'll likely want to modify or at least look into:
+- `web-url` - The URL of the website where `nmebious` is being hosted (this will be displayed on the RSS feed).
+- `boards` - Board names, backgrounds, colors. Must be 1 or more. You can opt to only have one board if you're going for a "classic" mebious look, or have more, in which case the default frontend will display a list of them. As for what the boards should be, you decide! They are just tools to separate context between each other, for example a `technology` board would contain posts on that topic, etc.
+- `api-requires-key` - Whether or not the API for POSTing/GETting data will be open to the public. If set to `nil` (false), anyone will be able to access the api, if set to `t` (true), only those with an API key will be able to access it (You'll be able to manage these keys via the admin panel).
+- `socket-server-enabled` - If enabled, a client that supports WebSockets will receive updates on new posts, which can be used to update the feed realtime. If you don't plan on using alternative frontends for your instance, you should probably set this to `nil`.
+- `allow-duplicates-after` - A number stating how many unique posts a user can make until being allowed to post a duplicate. Set to `nil` if you want to allow duplicate posts instantly.
+- `filtered-words` - Words that should be filtered, must be a list of strings, for example `'("filter1" "filter2")`
+
+For more options look into the `config.lisp` file itself, every field has a comment explaining what it does.
 
 ## API
 All API routes return data in JSON format.
