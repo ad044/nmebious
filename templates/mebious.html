@@ -48,7 +48,7 @@
       {% for file in file-posts %}
       <img class="image" src="/uploads/{{ active-board }}/{{ file.data }}" onerror="this.style.display='none'" style="{{ file.style }}"></img>
       {% endfor %}
-      {% if not single-board-p and user-prefs.boardlist == "on" %}
+      {% if not single-board-p %}
         <div class="boardlist">
             {% for board in board-names %}
                 <a href="/boards/{{ board }}">{{ board }}</a>
@@ -56,7 +56,7 @@
         </div>
       {% endif %}
 
-        {% ifequal user-prefs.pagination "on" %}
+        {% if pagination-enabled-p %}
       <div class="pagination-buttons">
         {% if prev-page %}
             <a href="/boards/{{ active-board }}?page={{ prev-page }}">ᐱ</a>
@@ -64,6 +64,6 @@
         {% if next-page %}
             <a href="/boards/{{ active-board }}?page={{ next-page }}">ᐯ</a>
         {% endif %}
-{% endifequal %}
+	{% endif %}
       </div>
 {% endblock %}

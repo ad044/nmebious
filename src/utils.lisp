@@ -138,10 +138,11 @@
 
 (defmacro after-submit-file (&body body)
   `(bind ((post-params (post-parameters*))
-           ((src filename content-type) (or (cassoc "file"
-                                                    post-params
-                                                    :test #'string=)
-                                            (throw-request-error "No file data found." :code 400)))
+           ((src filename content-type)
+	    (or (cassoc "file"
+                        post-params
+                        :test #'string=)
+                (throw-request-error "No file data found." :code 400)))
            (board (or (cassoc "board"
                               post-params
                               :test #'string=)
@@ -151,6 +152,7 @@
                           1000000))
            (ip-hash (hash-ip (real-remote-addr)))
            (checksum (hex (md5sum-file src))))
+     (declare (ignore filename))
      (file-post-validity-check :content-type content-type
                                :checksum checksum
                                :board board
@@ -198,8 +200,10 @@
                  (setf (session-value :flash-message) e)
                  (redirect "/admin/auth"))))))
         (fail (e)
+	  (print e)
           (send-error "Bad request." 400))
         (catch-error (e)
+	  (print e)
           (let ((message (message e)))
             (send-error (cassoc :error-message message) (cassoc :code message)))))
      (handler-bind ((request-error #'catch-error)

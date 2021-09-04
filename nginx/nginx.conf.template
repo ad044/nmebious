@@ -20,6 +20,10 @@ server {
 	proxy_set_header    Host            $host;
 	proxy_set_header    X-Real-IP       $remote_addr;
 	proxy_set_header    X-Forwarded-for $remote_addr;
+	error_page  404  /errors/404.html;
+	error_page  403  /errors/403.html;
+	error_page  429  /errors/429.html;
+	error_page  413  /errors/413.html;
 	listen 80;
 
         location /ws {
@@ -51,4 +55,9 @@ server {
 	location /uploads {
 		alias /var/www/nmebious/static/uploads;
 	}
+
+        location /errors {
+		internal;
+	    	alias /var/www/nmebious/error-pages;
+        }
 }

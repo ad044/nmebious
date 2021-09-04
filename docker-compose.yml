@@ -20,6 +20,9 @@ services:
         target: /var/www/nmebious/static
         volume:
           nocopy: true
+      - type: volume
+        source: error-pages
+        target: /var/www/nmebious/error-pages
     environment:
       <<: *common-variables
       MAX_FILE_SIZE: ${MAX_FILE_SIZE}
@@ -50,6 +53,7 @@ services:
       driver: "local"
     volumes:
       - public-content:/usr/src/app/public
+      - error-pages:/usr/src/app/templates/error-pages
       - type: bind
         source: ./src/config.lisp
         target: /usr/src/app/src/config.lisp
@@ -60,4 +64,5 @@ services:
 
 volumes:
   public-content:
+  error-pages:
   dbdata:

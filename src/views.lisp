@@ -163,6 +163,7 @@
                           :text-posts stylized-text-posts
                           :file-posts stylized-file-posts
                           :active-board board
+			  :pagination-enabled-p (get-config :pagination-on-default-frontend-enabled-p)
                           :single-board-p (single-board-p)
                           :user-prefs (parse-user-preferences)
                           :board-names (unless (single-board-p)
@@ -179,6 +180,7 @@
 
 (defun render-error-page (msg code)
   (setf (return-code*) code)
+  (setf (content-type*) "text/html")
   (render-template* +error.html+ nil
                     :error msg))
 
@@ -191,7 +193,7 @@
                     :pagination-enabled-p (get-config :pagination-on-default-frontend-enabled-p)))
 
 (defun render-preferences-page ()
-  (let ((current-user-prefs (parse-user-preferences))
+  (let* ((current-user-prefs (parse-user-preferences))
 	 (render-prefs (mapcar
 			(lambda (pref)
 			  (append pref

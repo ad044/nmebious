@@ -1,9 +1,12 @@
 (in-package #:nmebious)
 
 (defvar *server*
-  (make-instance 'easy-routes:easy-routes-acceptor
-                 :port (get-config :port)
-                 :document-root nil))
+  (make-instance
+   'easy-routes:easy-routes-acceptor
+   :port (get-config :port)
+   :document-root nil
+   :error-template-directory (asdf:system-relative-pathname 'nmebious
+							    "templates/error-pages/")))
 
 (defvar *database-connected-p* nil)
 
@@ -25,6 +28,9 @@
     (get-config :uploads-dir))
 (define-static-resource-file "/favicon.ico"
     (merge-pathnames (get-config :static-dir) "favicon.ico"))
+
+;; This for some reason needs to be set to T for ERROR-TEMPLATE-DIRECTORY to work.
+(setf hunchentoot:*show-lisp-errors-p* t)
 
 (defun start-hunchentoot ()
   (start *server*)

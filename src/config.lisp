@@ -128,12 +128,10 @@
    (list
     (cons :icons 
 	  `((:description . "Display icons (top right corner) on the main page")
-	    (:default . t)
-	    (:depends-on . t)))
+	    (:default . t)))
     (cons :backgrounds
 	  `((:description . "Display custom backgrounds for boards (if set by the instance)")
-	    (:default . nil)
-	    (:depends-on . t))))))
+	    (:default . nil))))))
 
 ;; Utils for configuration
 (defun get-config (keyword)

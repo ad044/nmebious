@@ -46,14 +46,29 @@ Of course, before that we need to do some additional configuration:
 
 ## Configuration
 
-The configuration is located inside `src/config.lisp`.
+The configuration is located inside `src/config.lisp`.  
+Do not modify the original `*default-config*` variable, since the test suite depends on it.  
+Instead, set the `*config*` varible to your liking. There are two ways of doing this:
+
+1. Using `extend-config`:
+```
+;; Example
+(defvar *config*
+  (extend-config *default-config*
+		 :web-url "new-url"
+		 :api-requires-key t))
+```
+this way, you can define a new configuration based on the original one. It will replace the specified values with new ones.
+2. Directly copying the value of `*default-config*`, and setting that as `*config*`, and modifying stuff as needed afterwards.
+Both of these are valid, but the first approach is recommended.
+
 Here is a list of things that you'll likely want to modify or at least look into:
-- `*web-url*` - The URL of the website where `nmebious` is being hosted (this will be displayed on the RSS feed).
-- `*boards*` - Board names, backgrounds, colors. Must be 1 or more. You can opt to only have one board if you're going for a "classic" mebious look, or have more, in which case the default frontend will display a list of them. As for what the boards should be, you decide! They are just tools to separate context between each other, for example a `technology` board would contain posts on that topic, etc.
-- `*api-requires-key*` - Whether or not the API for POSTing/GETting data will be open to the public. If set to `nil` (false), anyone will be able to access the api, if set to `t` (true), only those with an API key will be able to access it (You'll be able to manage these keys via the admin panel).
-- `*socket-server-enabled*` - If enabled, a client that supports WebSockets will receive updates on new posts, which can be used to update the feed realtime. If you don't plan on using alternative frontends for your instance, you should probably set this to `nil`.
-- `*allow-duplicates-after*` - A number stating how many unique posts a user can make until being allowed to post a duplicate. Set to `nil` if you want to allow duplicate posts instantly.
-- `*filtered-words*` - Words that should be filtered, must be a list of strings, for example `'("filter1" "filter2")`
+- `web-url` - The URL of the website where `nmebious` is being hosted (this will be displayed on the RSS feed).
+- `boards` - Board names, backgrounds, colors. Must be 1 or more. You can opt to only have one board if you're going for a "classic" mebious look, or have more, in which case the default frontend will display a list of them. As for what the boards should be, you decide! They are just tools to separate context between each other, for example a `technology` board would contain posts on that topic, etc.
+- `api-requires-key` - Whether or not the API for POSTing/GETting data will be open to the public. If set to `nil` (false), anyone will be able to access the api, if set to `t` (true), only those with an API key will be able to access it (You'll be able to manage these keys via the admin panel).
+- `socket-server-enabled` - If enabled, a client that supports WebSockets will receive updates on new posts, which can be used to update the feed realtime. If you don't plan on using alternative frontends for your instance, you should probably set this to `nil`.
+- `allow-duplicates-after` - A number stating how many unique posts a user can make until being allowed to post a duplicate. Set to `nil` if you want to allow duplicate posts instantly.
+- `filtered-words` - Words that should be filtered, must be a list of strings, for example `'("filter1" "filter2")`
 
 For more options look into the `config.lisp` file itself.
 
@@ -62,10 +77,10 @@ All API routes return data in JSON format.
 
 - POST `/api/submit/text` - Takes data of type `application/x-www-form-urlencoded` and responds with a status code and message.  
 Must contain a `board` and `text`.
-- POST `/api/submit/file` - Takes data of type `multipart/form-data` and responts with a status code and message.  
+- POST `/api/submit/file` - Takes data of type `multipart/form-data` and responds with a status code and message.  
 Must contain a `board` and `file`.
 - GET `/api/posts/` - Returns the last 15 posts across all boards by default.  
-Can take optional query parameters such as `count` and `offset`, where `count` denotes how many posts to GET and is <= `*post-get-limit*`, and `offset` denotes the `OFFSET` inside the SQL query.  
+Can take optional query parameters such as `count` and `offset`, where `count` denotes how many posts to GET and is <= `post-get-limit`, and `offset` denotes the `OFFSET` inside the SQL query.  
 `count` defaults to 15, while `offset` defaults to 0.  
 Example: `/api/posts/count=15&offset=30`
 - GET `/api/posts/:board` - Behaves identically to a regular `/api/posts/` request, except it only returns posts from the specified board.
@@ -73,7 +88,7 @@ Example: `/api/posts/count=15&offset=30`
 
 ## FAQ
 - How to add custom fonts?  
-Download your desired font, place it anywhere you want (naturally that would be `public/fonts`), then, in `public/css/fonts.css` declare it using `font-face` and add the `font-family` as a string to the parameter `*fonts*` located inside `config.lisp`.
+Download your desired font, place it anywhere you want (naturally that would be `public/fonts`), then, in `public/css/fonts.css` declare it using `font-face` and add the `font-family` as a string to the parameter `fonts` located inside `config.lisp`.
 - Docker vs manual deployment?  
 Probably Docker.
 - Why rewrite from TS?  

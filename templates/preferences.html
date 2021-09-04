@@ -9,10 +9,8 @@
     <br>
 
     {% for (key . value) in preferences %}
-    {% if value.depends-on %}
         <input type="checkbox" name="{{ key }}" {% ifequal value.current "on" %}checked{% endifequal %}>
         <label>{{ value.description }}</label><br><br>
-    {% endif %}
     {% endfor %}
 
         <button type="submit">Update preferences</button>
