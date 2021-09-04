@@ -53,13 +53,15 @@ Instead, set the `*config*` varible to your liking. There are two ways of doing 
 1. Using `extend-config`:
 ```
 ;; Example
+;; Here the config will have all the defaults, with `web-url` and `api-requires-key` being set to new values.
 (defvar *config*
   (extend-config *default-config*
 		 :web-url "new-url"
 		 :api-requires-key t))
 ```
-this way, you can define a new configuration based on the original one. It will replace the specified values with new ones.
-2. Directly copying the value of `*default-config*`, and setting that as `*config*`, and modifying stuff as needed afterwards.
+this way, you can define a new configuration based on the original one. It will replace the specified values with new ones.  
+2. Directly copying the value of `*default-config*`, and setting that as `*config*`, and modifying stuff as needed afterwards.  
+
 Both of these are valid, but the first approach is recommended.
 
 Here is a list of things that you'll likely want to modify or at least look into:
@@ -70,7 +72,7 @@ Here is a list of things that you'll likely want to modify or at least look into
 - `allow-duplicates-after` - A number stating how many unique posts a user can make until being allowed to post a duplicate. Set to `nil` if you want to allow duplicate posts instantly.
 - `filtered-words` - Words that should be filtered, must be a list of strings, for example `'("filter1" "filter2")`
 
-For more options look into the `config.lisp` file itself.
+For more options look into the `config.lisp` file itself, every field has a comment explaining what it does.
 
 ## API
 All API routes return data in JSON format.
