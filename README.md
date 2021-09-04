@@ -65,12 +65,12 @@ this way, you can define a new configuration based on the original one. It will 
 Both of these are valid, but the first approach is recommended.
 
 Here is a list of things that you'll likely want to modify or at least look into:
-- `web-url` - The URL of the website where `nmebious` is being hosted (this will be displayed on the RSS feed).
-- `boards` - Board names, backgrounds, colors. Must be 1 or more. You can opt to only have one board if you're going for a "classic" mebious look, or have more, in which case the default frontend will display a list of them. As for what the boards should be, you decide! They are just tools to separate context between each other, for example a `technology` board would contain posts on that topic, etc.
-- `api-requires-key` - Whether or not the API for POSTing/GETting data will be open to the public. If set to `nil` (false), anyone will be able to access the api, if set to `t` (true), only those with an API key will be able to access it (You'll be able to manage these keys via the admin panel).
-- `socket-server-enabled` - If enabled, a client that supports WebSockets will receive updates on new posts, which can be used to update the feed realtime. If you don't plan on using alternative frontends for your instance, you should probably set this to `nil`.
-- `allow-duplicates-after` - A number stating how many unique posts a user can make until being allowed to post a duplicate. Set to `nil` if you want to allow duplicate posts instantly.
-- `filtered-words` - Words that should be filtered, must be a list of strings, for example `'("filter1" "filter2")`
+- `:web-url` - The URL of the website where `nmebious` is being hosted (this will be displayed on the RSS feed).
+- `:boards` - Board names, backgrounds, colors. Must be 1 or more. You can opt to only have one board if you're going for a "classic" mebious look, or have more, in which case the default frontend will display a list of them. As for what the boards should be, you decide! They are just tools to separate context between each other, for example a `technology` board would contain posts on that topic, etc.
+- `:api-requires-key` - Whether or not the API for `POST`-ing/`GET`-ting data will be open to the public. If set to `nil` (false), anyone will be able to access the api, if set to `t` (true), only those with an API key will be able to access it (You'll be able to manage these keys via the admin panel).
+- `:socket-server-enabled` - If enabled, a client that supports WebSockets will receive updates on new posts, which can be used to update the feed realtime. If you don't plan on using alternative frontends for your instance, you should probably set this to `nil`.
+- `:allow-duplicates-after` - A number stating how many unique posts a user can make until being allowed to post a duplicate. Set to `nil` if you want to allow duplicate posts instantly.
+- `:filtered-words` - Words that should be filtered, must be a list of strings, for example `'("filter1" "filter2")`
 
 For more options look into the `config.lisp` file itself, every field has a comment explaining what it does.
 
@@ -90,7 +90,7 @@ Example: `/api/posts/count=15&offset=30`
 
 ## FAQ
 - How to add custom fonts?  
-Download your desired font, place it anywhere you want (naturally that would be `public/fonts`), then, in `public/css/fonts.css` declare it using `font-face` and add the `font-family` as a string to the parameter `fonts` located inside `config.lisp`.
+Download your desired font, place it anywhere you want (naturally that would be `public/fonts`), then, in `public/css/fonts.css` declare it using `font-face` and add the `font-family` as a string to the parameter `:fonts` located inside `config.lisp`.
 - Docker vs manual deployment?  
 Probably Docker.
 - Why rewrite from TS?  
