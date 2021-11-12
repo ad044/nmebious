@@ -85,9 +85,8 @@
                                       :decorators (@html @check-frontend-enabled))
      ((page :init-form 0 :parameter-type 'integer))
   (with-fail-handler (web-board :type 'web-view)
-    (if (or (single-board-p)
-            (and (not (get-config :pagination-on-default-frontend-enabled-p))
-                 (> page 0)))
+    (if (and (not (get-config :pagination-on-default-frontend-enabled-p))
+                 (> page 0))
         (render-error-page "This instance has pagination disabled." 403)
         (progn
           (start-session)
