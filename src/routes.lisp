@@ -57,12 +57,15 @@
                     (let ((data (cassoc :data item))
                           (id (cassoc :id item))
                           (board (cassoc :board item))
-                          (date (cassoc :submission-date item)))
-                      (rss-item nil
+                          (date (cassoc :submission-date item))
+                          (is-file (string= (cassoc :type item) "file")))
+                      (rss-item (str:shorten 70 data :ellipsis (unless is-file "..."))
                                 :guid id
                                 :category (unless (single-board-p) board)
                                 :description data
-                                :pubDate date)))))))))))
+                                :pubDate date
+                                :link (if is-file (format nil "/uploads/~a/~a" board data)
+                                                  "/"))))))))))))
 
 ;; POST file via the default frontend
 (defroute web-submit-file ("/web-view/submit/file" :method :post
