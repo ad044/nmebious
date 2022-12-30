@@ -10,4 +10,4 @@ run:
 	$(LISP) --load nmebious.asd \
 	     	--eval '(ql:quickload :nmebious)' \
 	     	--eval '(in-package :nmebious)' \
-	     	--eval '(start-server)'
+	     	--eval '(main)'
