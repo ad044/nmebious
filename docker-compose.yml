@@ -12,6 +12,7 @@ services:
       - "80:80"
     depends_on:
       - app
+    restart: always
     logging:
       driver: "local"
     volumes:
@@ -30,6 +31,7 @@ services:
     build:
       context: .
       dockerfile: docker/db/Dockerfile
+    restart: always
     logging:
       driver: "local"
     environment:
@@ -49,9 +51,11 @@ services:
       - "4005:4005"
       - "8080:8080"
       - "12345:12345"
+    restart: always
     logging:
       driver: "local"
     volumes:
+      - quicklisp:/root/quicklisp
       - public-content:/usr/src/app/public
       - error-pages:/usr/src/app/templates/error-pages
       - type: bind
@@ -63,6 +67,7 @@ services:
       - DB_HOST=db
 
 volumes:
+  quicklisp:
   public-content:
   error-pages:
   dbdata:
