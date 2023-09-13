@@ -19,7 +19,7 @@
 		    (get-config :db-pass)
 		    (get-config :db-host))
   (setf *database-connected-p* t)
-  (register-admin-user (get-config :admin-username) 
+  (register-admin-user (get-config :admin-username)
                        (get-config :admin-pass)))
 
 (define-static-resource "/static/"
@@ -61,27 +61,30 @@
   (when (started-p *server*)
     (stop-hunchentoot)))
 
-(defun main (&rest args)
-  (declare (ignore args))
+(defun main (&optional (swank nil))
   (start-server
-   (or *config*
-       (progn 
-	 (format t "~%WARNING: No custom configuration found, falling back to default.~%")
-	 *default-config*)))
-  (setf swank::*loopback-interface* "0.0.0.0")
-  (swank-loader:init)
-  (swank:create-server :port 4005
-                       :style swank:*communication-style*
-                       :dont-close t)
+    (or *config*
+	(progn
+	  (format t "~%WARNING: No custom configuration found, falling back to default.~%")
+	  *default-config*)))
+
+  (if swank
+    (progn
+      (setf swank::*loopback-interface* "0.0.0.0")
+      (swank-loader:init)
+      (swank:create-server :port 4005
+			   :style swank:*communication-style*
+			   :dont-close t)))
+
   (handler-case
-      (bt:join-thread
-       (find-if (lambda (th)
-                  (search "hunchentoot" (bt:thread-name th)))
-                (bt:all-threads)))
+    (bt:join-thread
+      (find-if (lambda (th)
+		 (search "hunchentoot" (bt:thread-name th)))
+	       (bt:all-threads)))
     (sb-sys:interactive-interrupt ()
-      (progn
-        (format *error-output* "Aborting.~&")
-        (stop-server)
-        (uiop:quit)))
+				  (progn
+				    (format *error-output* "Aborting.~&")
+				    (stop-server)
+				    (uiop:quit)))
     (error (c)
-      (format t "Woops, an unknown error occured:~&~a~&" c))))
+	   (format t "Woops, an unknown error occured:~&~a~&" c))))
